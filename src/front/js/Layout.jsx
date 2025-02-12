@@ -7,7 +7,7 @@ import { BackendURL } from "./component/BackendURL.jsx";
 import { Navbar } from "./component/Navbar.jsx";
 import { Footer } from "./component/Footer.jsx";
 // Custom Views
-import { Home } from "./pages/Home.jsx/index.js";
+import { Home } from "./pages/Home.jsx";
 
 
 // Create your first component
