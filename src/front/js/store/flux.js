@@ -20,3 +20,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 };
 
 export default getState;
+
+// Revisar este gist para más detalles sobre la sintaxis dentro del archivo flux.js
+// https://gist.github.com/hchocobar/25a43adda3a66130dc2cb2fed8b212d0
