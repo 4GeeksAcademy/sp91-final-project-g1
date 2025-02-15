@@ -128,4 +128,70 @@ class Players(db.Model):
                 "nationality": self.nationality,
                 "position": self.position,
                 "photo": self.photo,
-                "team_id": self.team_id}
+                "team_id": self.team_id}    
+class FantasyCoach(db.model):
+    id = db.Column(db.Integer, primary_key=True)
+    # coach_id  
+    # fantasy_team_id 
+    points = db.Column(db.Integer, unique=False, nullable=False)
+    market_value = db.Column(db.Integer, unique=False, nullable=False)
+    clause_value = db.Column(db.Integer, unique=False, nullable=False)
+
+    def __repr__(self):
+        return f'FantasyCoach: {self.coach_id} - {self.market_value}'
+    
+    def serialize(self):
+        return {
+            "id": self.id,
+            # "coach_id": self.coach_id,
+            # "fantasy_team_id": self.fantasy_team_id,
+            "points": self.points,
+            "market_value": self.market_value,
+            "clause_value": self.clause_value,
+        }
+    
+class FantasyTeam(db.model):
+    id = db.Column(db.Integer, primary_key=True)
+    # user_id 
+    name = db.Column(db.String(), unique=False, nullable=False)
+    logo = db.Column(db.String(), unique=False, nullable=True)
+    formation = db.Column(db.String(), unique=False, nullable=False)
+    points = db.Column(db.Integer, unique=False, nullable=False)
+
+    def __repr__(self):
+        return f'FantasyTeam: {self.id} - {self.name}'
+    
+    def serialize(self):
+        return {
+            "id": self.id,
+            # "user_id": self.user_id,
+            "name": self.name,
+            "logo": self.logo,
+            "formation": self.formation,
+            "points": self.points,
+        }
+    
+class FantasyPlayer(db.model):
+    id = db.Column(db.Integer, primary_key=True)
+    # player_id 
+    # fantasy_team_id 
+    position = db.Column(db.Integer, unique=False, nullable=False)
+    points = db.Column(db.Integer, unique=False, nullable=False)
+    market_value = db.Column(db.Integer, unique=False, nullable=False)
+    clause_value = db.Column(db.Integer, unique=False, nullable=False)
+    is_scoutable = db.Column(db.Boolean, unique=False, nullable=False)
+
+    def __repr__(self):
+        return f'FantasyPlayer: {self.id} - {self.player_id}'
+    
+    def serialize(self):
+        return {
+            "id": self.id,
+            # "player_id": self.player_id,
+            # "fantasy_team_id": self.fantasy_team_id,
+            "position": self.position,
+            "points": self.points,
+            "market_value": self.market_value,
+            "clause_value": self.clause_value,
+            "is_scoutable": self.is_scoutable,
+        }
