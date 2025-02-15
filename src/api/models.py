@@ -20,178 +20,79 @@ class Users(db.Model):
         return {"id": self.id,
                 "username": self.username,
                 "email": self.email,
-                "is_active": self.is_active,
-                "phone_number": self.phone_number}
+                'is_active': self.is_active}
 
 
-class FantasyStandings(db.Model):
-    __tablename__ = "fantasy_standings"
+class matches_events(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, unique=True, nullable=False)
+    time_elapsed = db.Column(db.Integer, unique=False, nullable=False)
+    extra_time_elapsed = db.Column(db.Integer, unique=False, nullable=False)
+    team_id = db.Column(db.Integer, unique=True, nullable=False)
+    player_id = db.Column(db.Integer, unique=True, nullable=False)
+    assist_id = db.Column(db.Integer, unique=True, nullable=False)
+    type = db.Column(db.String(), unique=True, nullable=False)
+    match_id = db.Column(db.String(), unique=True, nullable=False)
+    
+    def __repr__(self):
+        return f'<User {self.id} - {self.match_id}>'
 
+    def serialize(self):
+        return {"id":self.id,
+                "match_id": self.match_id,
+                "time_elapsed": self.time_elapsed,
+                "extra_time_elapsed": self.extra_time_elapsed,
+                "team_id": self.team_id,
+                "payer_id":self.player_id,
+                "assist_id": self.assist_id,
+                "type": self.type,
+                "detail": self.detail}
+
+
+class standings(db.Model):
     rank = db.Column(db.Integer, primary_key=True)
-    # fantasy_team_id = 
-
-    def __repr__(self):
-        return f'<FantasyStanding {self.rank} - {self.fantasy_team_id}>'
-    
-    def serialize(self):
-        return {"rank": self.rank,
-                "fantasy_team_id": self.fantasy_team_id}
-
-
-class FantasyLeagues(db.Model):
-    __tablename__ = "fantasy_league"
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=False, nullable=False)
-    photo = db.Column(db.String(255), unique=False, nullable=True)
-
-    def __repr__(self):
-        return f'<FantasyLeague {self.id} - {self.name}>'
-    
-    def serialize(self):
-        return {"id": self.id,
-                "name": self.name,
-                "photo": self.photo}
-
-
-class FantasyLeagueTeams(db.Model):
-    __tablename__ = "fantasy_league_teams"
-
-    id = db.Column(db.Integer, primary_key=True)
-    # fantasy_league_id = 
-    # fantasy_team_id = 
-
-    def __repr__(self):
-        return f'<FantasyLeagueTeam {self.fantasy_team_id} - {self.fantasy_league_id}>'
-    
-    def serialize(self):
-        return {"id": self.id,
-                "fantasy_league_id": self.fantasy_league_id,
-                "fantasy_team_id": self.fantasy_team_id}
-
-
-class Teams(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=False, nullable=False)
-    logo = db.Column(db.String(255), unique=False, nullable=True)
-
-    def __repr__(self):
-        return f'<Team {self.id} - {self.name}>'
-    
-    def serialize(self):
-        return {"id": self.id,
-                "name": self.name,
-                "photo": self.photo}
-
-
-class Coaches(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=False, nullable=False)
-    first_name = db.Column(db.String(50), unique=False, nullable=False)
-    last_name = db.Column(db.String(50), unique=False, nullable=False)
-    nationality = db.Column(db.String(50), unique=False, nullable=False)
-    photo = db.Column(db.String(255), unique=False, nullable=True)
-    #team_id = 
-
-    def __repr__(self):
-        return f'<Coach {self.id} - {self.name}>'
-    
-    def serialize(self):
-        return {"id": self.id,
-                "name": self.name,
-                "first_name": self.first_name,
-                "last_name": self.last_name,
-                "nationality": self.nationality,
-                "photo": self.photo,
-                "team_id": self.team_id}
-
-class Players(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=False, nullable=False)
-    first_name = db.Column(db.String(50), unique=False, nullable=False)
-    last_name = db.Column(db.String(50), unique=False, nullable=False)
-    number = db.Column(db.Integer, unique=False, nullable=False)
-    nationality = db.Column(db.String(50), unique=False, nullable=False)
-    position = db.Column(db.String(50), unique=False, nullable=False)
-    photo = db.Column(db.String(255), unique=False, nullable=True)
-    #team_id = 
-
-    def __repr__(self):
-        return f'<Player {self.id} - {self.name}>'
-    
-    def serialize(self):
-        return {"id": self.id,
-                "name": self.name,
-                "first_name": self.first_name,
-                "last_name": self.last_name,
-                "number": self.number,
-                "nationality": self.nationality,
-                "position": self.position,
-                "photo": self.photo,
-                "team_id": self.team_id}    
-class FantasyCoach(db.model):
-    id = db.Column(db.Integer, primary_key=True)
-    # coach_id  
-    # fantasy_team_id 
+    team_id = db.Column(db.Integer, unique=True, nullable=False)
     points = db.Column(db.Integer, unique=False, nullable=False)
-    market_value = db.Column(db.Integer, unique=False, nullable=False)
-    clause_value = db.Column(db.Integer, unique=False, nullable=False)
+    games_won = db.Column(db.Integer, unique=False, nullable=False)
+    games_draw = db.Column(db.Integer,  unique=False, nullable=False)
+    games_lost = db.Column(db.Integer,  unique=False, nullable=False)
+    goals_for = db.Column(db.Integer,  unique=False, nullable=False)
+    goals_against = db.Column(db.Integer,  unique=False, nullable=False)
+    form = db.Column(db.String(), unique=False, nullable=False)
 
     def __repr__(self):
-        return f'FantasyCoach: {self.coach_id} - {self.market_value}'
-    
+        return f'<User {self.rank} - {self.team_id}>'
+ 
     def serialize(self):
-        return {
-            "id": self.id,
-            # "coach_id": self.coach_id,
-            # "fantasy_team_id": self.fantasy_team_id,
-            "points": self.points,
-            "market_value": self.market_value,
-            "clause_value": self.clause_value,
-        }
+        return {"rank":self.rank,
+                "team_id": self.team_id,
+                "points": self.points,
+                "games_won": self.games_won,
+                "games_draw": self.games_draw,
+                "games_lost":self.games_lost,
+                "goals_for": self.goals_for,
+                "goals_against": self.goals_against,
+                "form": self.form}
     
-class FantasyTeam(db.model):
+
+class matches(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    # user_id 
-    name = db.Column(db.String(), unique=False, nullable=False)
-    logo = db.Column(db.String(), unique=False, nullable=True)
-    formation = db.Column(db.String(), unique=False, nullable=False)
-    points = db.Column(db.Integer, unique=False, nullable=False)
-
+    date = db.Column(db.DateTime, unique=True, nullable=False)
+    home_team_id = db.Column(db.Integer, unique=False, nullable=False)
+    away_team_id = db.Column(db.Integer, unique=False, nullable=False)
+    home_goals = db.Column(db.Integer, unique=True, nullable=False)
+    away_goals = db.Column(db.Integer, unique=False, nullable=False)
+    is_home_winner = db.Column(db.Boolean, unique=True, nullable=False)
+    
     def __repr__(self):
-        return f'FantasyTeam: {self.id} - {self.name}'
-    
-    def serialize(self):
-        return {
-            "id": self.id,
-            # "user_id": self.user_id,
-            "name": self.name,
-            "logo": self.logo,
-            "formation": self.formation,
-            "points": self.points,
-        }
-    
-class FantasyPlayer(db.model):
-    id = db.Column(db.Integer, primary_key=True)
-    # player_id 
-    # fantasy_team_id 
-    position = db.Column(db.Integer, unique=False, nullable=False)
-    points = db.Column(db.Integer, unique=False, nullable=False)
-    market_value = db.Column(db.Integer, unique=False, nullable=False)
-    clause_value = db.Column(db.Integer, unique=False, nullable=False)
-    is_scoutable = db.Column(db.Boolean, unique=False, nullable=False)
+        return f'<User {self.id} - {self.date}>'
 
-    def __repr__(self):
-        return f'FantasyPlayer: {self.id} - {self.player_id}'
-    
     def serialize(self):
-        return {
-            "id": self.id,
-            # "player_id": self.player_id,
-            # "fantasy_team_id": self.fantasy_team_id,
-            "position": self.position,
-            "points": self.points,
-            "market_value": self.market_value,
-            "clause_value": self.clause_value,
-            "is_scoutable": self.is_scoutable,
-        }
+        return {"id":self.id,
+                "date": self.date,
+                "home_team_id": self.home_team_id,
+                "away_team_id": self.away_team_id,
+                "home_goals": self.home_goals,
+                "away_goals":self.away_goals,
+                "is_home_winner": self.is_home_winner}
+                 
