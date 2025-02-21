@@ -247,12 +247,12 @@ class Players(db.Model):
 class Matches(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uid = db.Column(db.Integer, unique=True, nullable=False)
-    date = db.Column(db.DateTime, unique=True, nullable=False)
+    date = db.Column(db.DateTime, unique=False, nullable=False)
     home_team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
     away_team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
-    home_goals = db.Column(db.Integer, unique=True, nullable=False)
+    home_goals = db.Column(db.Integer, unique=False, nullable=False)
     away_goals = db.Column(db.Integer, unique=False, nullable=False)
-    is_home_winner = db.Column(db.Boolean, unique=True, nullable=False)
+    is_home_winner = db.Column(db.Boolean, unique=False, nullable=False)
     home_team_to = db.relationship('Teams', foreign_keys=[home_team_id], backref=db.backref('home_team_is', lazy='select'))
     away_team_to = db.relationship('Teams', foreign_keys=[away_team_id], backref=db.backref('away_team_is', lazy='select'))
     
