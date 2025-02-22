@@ -5,3 +5,46 @@
     one more css for each page that will contain the selected used 
     on that page only (the ones not reused in other pages).
 */
+
+.overlay {
+    height: calc(100% - 115px);
+}
+.background {
+    position: fixed;
+	background: linear-gradient(to right, #FF4B2B, #FF416C);
+	background-repeat: no-repeat;
+	background-size: cover;
+    background-position: 0 0;
+    width: 50%;
+    left: 50%;
+	transition: all 0.6s ease-in-out;
+
+    &.left {
+        left: 0;
+    }
+}
+
+.sign-form {
+    z-index: 0;
+    transition: all 0s ease-in-out;
+
+    &.active {
+        z-index: 2;
+        transition: all 1.5s ease-in-out;
+    }
+}
+
+.overlay-panel {
+    color: white;
+    position: relative;
+	height: 100%;
+    opacity: 0;
+    z-index: -1;
+    transition: all 0.6s ease-in-out;
+    
+    &.visible {
+        opacity: 1;
+        transition: opacity 1.5s ease-in-out;
+        z-index: 3;
+    }
+}
