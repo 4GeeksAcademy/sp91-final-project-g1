@@ -102,7 +102,7 @@ class FantasyCoaches(db.Model):
     __tablename__ = "fantasy_coaches"
 
     id = db.Column(db.Integer, primary_key=True)
-    coach_id = db.Column(db.Integer, db.ForeignKey("coaches.id"))  
+    coach_id = db.Column(db.Integer, db.ForeignKey("coaches.uid"))  
     fantasy_team_id = db.Column(db.Integer, db.ForeignKey("fantasy_teams.id")) 
     points = db.Column(db.Integer, unique=False, nullable=False)
     market_value = db.Column(db.Integer, unique=False, nullable=False)
@@ -126,7 +126,7 @@ class FantasyPlayers(db.Model):
     __tablename__ = "fantasy_players"
     
     id = db.Column(db.Integer, primary_key=True)
-    player_id = db.Column(db.Integer, db.ForeignKey("players.id")) 
+    player_id = db.Column(db.Integer, db.ForeignKey("players.uid")) 
     fantasy_team_id = db.Column(db.Integer, db.ForeignKey("fantasy_teams.id")) 
     position = db.Column(db.Integer, unique=True, nullable=False)
     points = db.Column(db.Integer, unique=False, nullable=False)
@@ -167,7 +167,7 @@ class Teams(db.Model):
 
 class Standings(db.Model):
     rank = db.Column(db.Integer, primary_key=True)
-    team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
+    team_id = db.Column(db.Integer, db.ForeignKey("teams.uid"))
     points = db.Column(db.Integer, unique=False, nullable=False)
     games_won = db.Column(db.Integer, unique=False, nullable=False)
     games_draw = db.Column(db.Integer,  unique=False, nullable=False)
@@ -200,7 +200,7 @@ class Coaches(db.Model):
     last_name = db.Column(db.String(50), unique=False, nullable=False)
     nationality = db.Column(db.String(50), unique=False, nullable=False)
     photo = db.Column(db.String(255), unique=False, nullable=True)
-    team_id = db.Column(db.Integer, db.ForeignKey("teams.id")) 
+    team_id = db.Column(db.Integer, db.ForeignKey("teams.uid")) 
     team_to = db.relationship('Teams', foreign_keys=[team_id], backref=db.backref('coach_of', lazy='select'))
 
     def __repr__(self):
@@ -226,7 +226,7 @@ class Players(db.Model):
     nationality = db.Column(db.String(50), unique=False, nullable=False)
     position = db.Column(db.String(50), unique=False, nullable=False)
     photo = db.Column(db.String(255), unique=False, nullable=True)
-    team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
+    team_id = db.Column(db.Integer, db.ForeignKey("teams.uid"))
     team_to = db.relationship('Teams', foreign_keys=[team_id], backref=db.backref('player_of', lazy='select'))
 
     def __repr__(self):
@@ -248,8 +248,8 @@ class Matches(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uid = db.Column(db.Integer, unique=True, nullable=False)
     date = db.Column(db.DateTime, unique=False, nullable=False)
-    home_team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
-    away_team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
+    home_team_id = db.Column(db.Integer, db.ForeignKey("teams.uid"))
+    away_team_id = db.Column(db.Integer, db.ForeignKey("teams.uid"))
     home_goals = db.Column(db.Integer, unique=False, nullable=False)
     away_goals = db.Column(db.Integer, unique=False, nullable=False)
     is_home_winner = db.Column(db.Boolean, unique=False, nullable=False)
@@ -278,8 +278,8 @@ class MatchEvents(db.Model):
     time_elapsed = db.Column(db.Integer, unique=False, nullable=False)
     extra_time_elapsed = db.Column(db.Integer, unique=False, nullable=False)
     team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
-    player_id = db.Column(db.Integer, db.ForeignKey("players.id"))
-    assist_id = db.Column(db.Integer, db.ForeignKey("players.id"))
+    player_id = db.Column(db.Integer, db.ForeignKey("players.uid"))
+    assist_id = db.Column(db.Integer, db.ForeignKey("players.uid"))
     type = db.Column(db.String(255), unique=True, nullable=False)
     detail = db.Column(db.String(255), unique=True, nullable=False)
     match_to = db.relationship('Matches', foreign_keys=[match_id], backref=db.backref('match_of', lazy='select'))

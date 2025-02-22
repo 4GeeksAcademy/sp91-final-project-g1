@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 619fcd4734a2
+Revision ID: 9a7d9ab2faae
 Revises: 
-Create Date: 2025-02-21 17:36:40.580556
+Create Date: 2025-02-22 09:24:24.980821
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '619fcd4734a2'
+revision = '9a7d9ab2faae'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -53,7 +53,7 @@ def upgrade():
     sa.Column('nationality', sa.String(length=50), nullable=False),
     sa.Column('photo', sa.String(length=255), nullable=True),
     sa.Column('team_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['team_id'], ['teams.id'], ),
+    sa.ForeignKeyConstraint(['team_id'], ['teams.uid'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('uid')
     )
@@ -76,13 +76,9 @@ def upgrade():
     sa.Column('home_goals', sa.Integer(), nullable=False),
     sa.Column('away_goals', sa.Integer(), nullable=False),
     sa.Column('is_home_winner', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['away_team_id'], ['teams.id'], ),
-    sa.ForeignKeyConstraint(['home_team_id'], ['teams.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('date'),
-    sa.UniqueConstraint('home_goals'),
-    sa.UniqueConstraint('is_home_winner'),
-    sa.UniqueConstraint('uid')
+    sa.ForeignKeyConstraint(['away_team_id'], ['teams.uid'], ),
+    sa.ForeignKeyConstraint(['home_team_id'], ['teams.uid'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('players',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -95,7 +91,7 @@ def upgrade():
     sa.Column('position', sa.String(length=50), nullable=False),
     sa.Column('photo', sa.String(length=255), nullable=True),
     sa.Column('team_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['team_id'], ['teams.id'], ),
+    sa.ForeignKeyConstraint(['team_id'], ['teams.uid'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('uid')
     )
@@ -109,7 +105,7 @@ def upgrade():
     sa.Column('goals_for', sa.Integer(), nullable=False),
     sa.Column('goals_against', sa.Integer(), nullable=False),
     sa.Column('form', sa.String(length=5), nullable=False),
-    sa.ForeignKeyConstraint(['team_id'], ['teams.id'], ),
+    sa.ForeignKeyConstraint(['team_id'], ['teams.uid'], ),
     sa.PrimaryKeyConstraint('rank')
     )
     op.create_table('fantasy_coaches',
@@ -119,7 +115,7 @@ def upgrade():
     sa.Column('points', sa.Integer(), nullable=False),
     sa.Column('market_value', sa.Integer(), nullable=False),
     sa.Column('clause_value', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['coach_id'], ['coaches.id'], ),
+    sa.ForeignKeyConstraint(['coach_id'], ['coaches.uid'], ),
     sa.ForeignKeyConstraint(['fantasy_team_id'], ['fantasy_teams.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -141,7 +137,7 @@ def upgrade():
     sa.Column('clause_value', sa.Integer(), nullable=False),
     sa.Column('is_scoutable', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['fantasy_team_id'], ['fantasy_teams.id'], ),
-    sa.ForeignKeyConstraint(['player_id'], ['players.id'], ),
+    sa.ForeignKeyConstraint(['player_id'], ['players.uid'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('position')
     )
@@ -162,9 +158,9 @@ def upgrade():
     sa.Column('assist_id', sa.Integer(), nullable=True),
     sa.Column('type', sa.String(length=255), nullable=False),
     sa.Column('detail', sa.String(length=255), nullable=False),
-    sa.ForeignKeyConstraint(['assist_id'], ['players.id'], ),
+    sa.ForeignKeyConstraint(['assist_id'], ['players.uid'], ),
     sa.ForeignKeyConstraint(['match_id'], ['matches.id'], ),
-    sa.ForeignKeyConstraint(['player_id'], ['players.id'], ),
+    sa.ForeignKeyConstraint(['player_id'], ['players.uid'], ),
     sa.ForeignKeyConstraint(['team_id'], ['teams.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('detail'),

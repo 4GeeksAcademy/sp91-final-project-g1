@@ -38,51 +38,34 @@ def populate_db():
             name = team.get('name'),
             logo = team.get('logo'))
         # db.session.add(new_team)
-        # Paso 1.3: Llamar a coachs/:team (:team = id del row actual)
-        coach_url = f'https://{os.getenv("API_URL")}/api/coachs'
-        params = { "team": team.get('id')}
-        headers = { "x-rapidapi-host": os.getenv("API_URL"),
-                    "x-rapidapi-key": os.getenv("API_KEY") }
-        result = requests.get(coach_url, params=params, headers=headers)
-        rows = result.json().get('response')
-        for row in rows:
-        # Paso 1.3.1: Subir el coach que esté en la temporada 23-24 a BDD
-            """new_coach = Coaches(
-                name = row.get('name'),
-                first_name = row.get('first_name'),
-                last_name = row.get('last_name'),
-                nationality = row.get('nationality'),
-                photo = row.get('photo'),
-                team_id = row.get('team_id'))
-            db.session.add(new_coach)"""
-            pass
+
     # Paso 2: Llamar a /fixtures
-        fixtures_url = f'https://{os.getenv("API_URL")}/fixtures'
-        params = { "league": 140, "season": 2023}
-        headers = { "x-rapidapi-host": os.getenv("API_URL"),
-                    "x-rapidapi-key": os.getenv("API_KEY") }
-        result = requests.get(fixtures_url, params=params, headers=headers)
-        rows = result.json().get('response')
-        print(result.json())
-        for row in rows:
-        # Paso 1.2: Subir los teams a BDD
-            fixture = row.get('fixture')
-            teams = row.get('teams')
-            goals = row.get('goals')
-            home_team = teams.get('home')
-            away_team = teams.get('away')
-            home_goals = goals.get('home')
-            away_goals = goals.get('away')
-            new_fixture = Matches(
-                uid = fixture.get('id'),
-                date = fixture.get('date'),
-                home_team_id = home_team.get('id'),
-                away_team_id = away_team.get('id'),
-                home_goals = home_goals,
-                away_goals = away_goals,
-                is_home_winner = home_goals > away_goals)
-            db.session.add(new_fixture)
-        # PASO 2.2: Subir las fixtures a BDD
+    fixtures_url = f'https://{os.getenv("API_URL")}/fixtures'
+    params = { "league": 140, "season": 2023}
+    headers = { "x-rapidapi-host": os.getenv("API_URL"),
+                "x-rapidapi-key": os.getenv("API_KEY") }
+    result = requests.get(fixtures_url, params=params, headers=headers)
+    rows = result.json().get('response')
+    for row in rows:
+    # Paso 1.2: Subir los teams a BDD
+        fixture = row.get('fixture')
+        teams = row.get('teams')
+        goals = row.get('goals')
+        home_team = teams.get('home')
+        away_team = teams.get('away')
+        home_goals = goals.get('home')
+        away_goals = goals.get('away')
+        new_fixture = Matches(
+            uid = fixture.get('id'),
+            date = fixture.get('date'),
+            home_team_id = home_team.get('id'),
+            away_team_id = away_team.get('id'),
+            home_goals = home_goals,
+            away_goals = away_goals,
+            is_home_winner = home_goals > away_goals)
+        print(f'Añadiendo fixture')
+        db.session.add(new_fixture)
+    # PASO 2.2: Subir las fixtures a BDD
     db.session.commit()
     print("Base de datos actualizada correctamente")
     return {}, 200
