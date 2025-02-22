@@ -300,3 +300,71 @@ class MatchEvents(db.Model):
                 "assist_id": self.assist_id,
                 "type": self.type,
                 "detail": self.detail}
+
+
+class MatchPlayers(db.model):
+    __tablename__ = "match_players"
+
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey("matches.uid"))
+    team_id = db.Column(db.Integer, db.ForeignKey("teams.uid"))
+    player_id = db.Column(db.Integer, db.ForeignKey("players.uid"))
+    minutes = db.Column(db.Integer, unique=False, nullable=False)
+    position = db.Column(db.Integer, unique=False, nullable=False)
+    dribbles_attemps= db.Column(db.Integer, unique=False, nullable=False)
+    dribbles_success= db.Column(db.Integer, unique=False, nullable=False)
+    dribbles_past = db.Column(db.Integer, unique=False, nullable=False)
+    fouls_drawn = db.Column(db.Integer, unique=False, nullable=False)
+    fouls_comitted = db.Column(db.Integer, unique=False, nullable=False)
+    cards_yellow= db.Column(db.Integer, unique=False, nullable=False)
+    cards_red= db.Column(db.Integer, unique=False, nullable=False)
+    penalty_commited= db.Column(db.Integer, unique=False, nullable=False)
+    passes_accuracy= db.Column(db.Integer, unique=False, nullable=False)
+    tackles_total= db.Column(db.Integer, unique=False, nullable=False)
+    tackles_blocks= db.Column(db.Integer, unique=False, nullable=False) 
+    tackles_interceptions= db.Column(db.Integer, unique=False, nullable=False) 
+    duels_total= db.Column(db.Integer, unique=False, nullable=False) 
+    duels_won= db.Column(db.Integer, unique=False, nullable=False) 
+    penalty_scored= db.Column(db.Integer, unique=False, nullable=False) 
+    penalty_saved= db.Column(db.Integer, unique=False, nullable=False) 
+    offsides= db.Column(db.Integer, unique=False, nullable=False) 
+    goals_total= db.Column(db.Integer, unique=False, nullable=False) 
+    goals_concedes= db.Column(db.Integer, unique=False, nullable=False) 
+    goals_assistes= db.Column(db.Integer, unique=False, nullable=False)
+    goals_saved= db.Column(db.Integer, unique=False, nullable=False) 
+    match_to = db.relationship('Matches', foreign_keys=[match_id], backref=db.backref('match_of', lazy='select'))
+    team_to = db.relationship('Teams', foreign_keys=[team_id], backref=db.backref('team_of', lazy='select'))
+    player_to = db.relationship('Players', foreign_keys=[player_id], backref=db.backref('player_of', lazy='select'))
+
+    
+    def __repr__(self):
+        return f'<MatchPlayers {self.match_id} -  {self.player_id}>'
+
+    def serialize(self):
+        return {"id":self.id,
+                "match_id": self.match_id,
+                "team_id": self.team_id,
+                "player_id": self.player_id,
+                "minutes": self.minutes,
+                "position":self.position,
+                "dribbles_attemps": self.dribbles_attemps,
+                "driblles_success": self.dribbles_success,
+                "driblles_past": self.dribbles_past,
+                "fouls_drawn": self.fouls_drawn,
+                "fouls_comitted": self.fouls_comitted,
+                "cards_yellow": self.cards_yellow,
+                "cards_red": self.cards_red,
+                "penalty_commited": self.penalty_commited,
+                "passes_accuracy": self.passes_accuracy,
+                "tackles_total": self.tackles_total,
+                "tackles_blocks": self.tackles_blocks,
+                "tackles_interceptions": self.tackles_interceptions,
+                "duels_total": self.duels_total,
+                "duels_won": self.duels_won,
+                "penalty_scored": self.penalty_scored,
+                "penalty_saved": self.penalty_saved,
+                "offsides": self.offsides,
+                "goals_total": self.goals_total,
+                "goals_concedes": self.goals_concedes,
+                "goals_assistes": self.goals_assistes,
+                "goals_saved": self.goals_saved,}
