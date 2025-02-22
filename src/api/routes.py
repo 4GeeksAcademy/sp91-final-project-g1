@@ -8,6 +8,7 @@ from flask import Flask, request, jsonify, url_for, Blueprint
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from api.models import db, Teams, Matches, Coaches, Players, FantasyCoaches, FantasyTeams, FantasyPlayers, Users, FantasyLeagues, FantasyStandings, FantasyLeagueTeams
+from datetime import datetime
 
 
 api = Blueprint('api', __name__)
@@ -38,7 +39,32 @@ def populate_db():
             name = team.get('name'),
             logo = team.get('logo'))
         # db.session.add(new_team)
-
+        coachs_url = f'https://{os.getenv("API_URL")}/coachs'
+        params = { "team": team.get('id') }
+        headers = { "x-rapidapi-host": os.getenv("API_URL"),
+                    "x-rapidapi-key": os.getenv("API_KEY") }
+        result = requests.get(coachs_url, params=params, headers=headers)
+        rows = result.json().get('response')
+        print(result.json())
+        for row in rows:
+            coachs = row
+            fecha_limite = datetime(2024, 5, 26)
+            coach_career = coachs.get('career')
+            for coach_team in coach_career:
+                start_date = datetime.strptime(coach_team.get('start'), '%Y-%m-%d')
+                end_date = datetime.strptime(coach_team.get('end'), '%Y-%m-%d') if coach_team.get('end') is not None else datetime(9999, 1, 1)
+                if (end_date is None and start_date < fecha_limite) or (end_date is not None and end_date > fecha_limite):
+                    new_coach = Coaches(
+                        uid = coachs.get('id'),
+                        name = coachs.get('name'),
+                        first_name = coachs.get('firstname'),
+                        last_name = coachs.get('lastname'),
+                        nationality = coachs.get('nationality'),
+                        photo = coachs.get('photo'),
+                        team_id = coachs.get('team').get('id'))
+                    print(f'Añadiendo coach')
+                    db.session.add(new_coach)
+                    break
     # Paso 2: Llamar a /fixtures
     fixtures_url = f'https://{os.getenv("API_URL")}/fixtures'
     params = { "league": 140, "season": 2023}
