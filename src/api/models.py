@@ -8,7 +8,7 @@ class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(80), unique=False, nullable=False)
+    password = db.Column(db.String(255), unique=False, nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
     phone_number = db.Column(db.String(20), unique=True, nullable=True)
 
@@ -302,7 +302,7 @@ class MatchEvents(db.Model):
                 "detail": self.detail}
 
 
-class MatchPlayers(db.model):
+class MatchPlayers(db.Model):
     __tablename__ = "match_players"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -332,9 +332,9 @@ class MatchPlayers(db.model):
     goals_concedes= db.Column(db.Integer, unique=False, nullable=False) 
     goals_assistes= db.Column(db.Integer, unique=False, nullable=False)
     goals_saved= db.Column(db.Integer, unique=False, nullable=False) 
-    match_to = db.relationship('Matches', foreign_keys=[match_id], backref=db.backref('match_of', lazy='select'))
-    team_to = db.relationship('Teams', foreign_keys=[team_id], backref=db.backref('team_of', lazy='select'))
-    player_to = db.relationship('Players', foreign_keys=[player_id], backref=db.backref('player_of', lazy='select'))
+    match_to = db.relationship('Matches', foreign_keys=[match_id], backref=db.backref('in_match', lazy='select'))
+    team_to = db.relationship('Teams', foreign_keys=[team_id], backref=db.backref('in_team', lazy='select'))
+    player_to = db.relationship('Players', foreign_keys=[player_id], backref=db.backref('by_player', lazy='select'))
 
     
     def __repr__(self):

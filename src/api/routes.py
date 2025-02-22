@@ -4,6 +4,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 import requests
 import dotenv
 import os
+import bcrypt
 from flask import Flask, request, jsonify, url_for, Blueprint
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
@@ -345,7 +346,7 @@ def fantasy_standing(id):
         return response_body, 200
 
 
-@api.route('/users', methods=['GET'])
+@api.route('/users', methods=['GET', 'POST'])
 def users():
     response_body = {}
     if request.method == 'GET':
@@ -354,7 +355,24 @@ def users():
         response_body['message'] = 'List de users'
         response_body['results'] = result
         return response_body, 200
-    
+    if request.method == 'POST':
+        data = request.json
+        username = data.get('username'),
+        email = data.get('email'),
+        password = data.get('password'),
+        phone_number = data.get('phone_number')
+        # converting password to array of bytes 
+        bytes = str(password).encode('utf-8') 
+        # generating the salt 
+        salt = bcrypt.gensalt() 
+        # Hashing the password 
+        hash = bcrypt.hashpw(bytes, salt) 
+        new_user = Users(username = username, email = email, password = hash, phone_number = phone_number, is_active = True)
+        db.session.add(new_user)
+        db.session.commit()
+        response_body['message'] = 'Usuario creado correctamente'
+        response_body['results'] = new_user.serialize()
+        return response_body, 201
 
 @api.route('/users/<int:id>', methods=['GET', 'PUT'])
 def user(id):
