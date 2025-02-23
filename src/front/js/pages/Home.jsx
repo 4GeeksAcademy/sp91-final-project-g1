@@ -1,12 +1,17 @@
-import React, { useContext, useRef, useEffect } from "react";
-import { Context } from "../store/appContext";
+import React, { useState } from "react";
 import "../../styles/home.css";
-import { Login } from "../component/Login.jsx";
+import { LoginForm } from "../component/Login/LoginForm.jsx";
+import { SignupForm } from "../component/Login/SignupForm.jsx";
+import { LoginSliderOverlays } from "../component/Login/LoginSliderOverlays.jsx";
 
 export const Home = () => {
-	const { store, actions } = useContext(Context);
+	const [isLoginActive, setIsLoginActive] = useState(true)
 
 	return (
-		<Login />
+        <div className="row flex-grow-1 align-items-center">
+			<LoginForm isLoginActive={isLoginActive} />
+			<SignupForm isLoginActive={isLoginActive} />
+			<LoginSliderOverlays isLoginActive={isLoginActive} setIsLoginActive={setIsLoginActive} />
+		</div>
 	)
 };

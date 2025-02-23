@@ -14,6 +14,32 @@ const getState = ({ getStore, getActions, setStore }) => {
 				const data = await response.json()
 				setStore({ message: data.message })
 				return;
+			},
+			login: async (dataToSend) => {
+				const uri = `${process.env.BACKEND_URL}/api/login`
+				const response = await fetch(uri, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(dataToSend)
+				})
+				const data = await response.json()
+				console.log(data)
+				return data
+			},
+			signup: async (dataToSend) => {
+				const uri = `${process.env.BACKEND_URL}/api/users`
+				const response = await fetch(uri, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(dataToSend)
+				})
+				const data = await response.json()
+				console.log(data)
+				return data
 			}
 		}
 	};

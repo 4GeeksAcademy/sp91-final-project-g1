@@ -1,6 +1,7 @@
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
+from flask_jwt_extended import create_access_token
 import requests
 import dotenv
 import os
@@ -16,83 +17,87 @@ api = Blueprint('api', __name__)
 CORS(api)  # Allow CORS requests to this API
 dotenv.load_dotenv()
 
+
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
     response_body = {}
     response_body['message'] = "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"
     return response_body, 200
 
-@api.route('/populate-db-1', methods=['GET'])
-def populate_db():
-    # Paso 1: Llamar a /teams
-    teams_url = f'https://{os.getenv("API_URL")}/teams' # TODO: eliminar /api, esta puesto para que falle, que no gaste peticiones
-    params = { "league": 140, "season": 2023}
-    headers = { "x-rapidapi-host": os.getenv("API_URL"),
-                "x-rapidapi-key": os.getenv("API_KEY") }
-    result = requests.get(teams_url, params=params, headers=headers)
-    rows = result.json().get('response')
-    print(result.json())
-    for row in rows:
-        # Paso 1.2: Subir los teams a BDD
-        team = row.get('team')
-        new_team = Teams(
-            uid = team.get('id'),
-            name = team.get('name'),
-            logo = team.get('logo'))
-        # db.session.add(new_team)
-        coachs_url = f'https://{os.getenv("API_URL")}/coachs'
-        params = { "team": team.get('id') }
-        headers = { "x-rapidapi-host": os.getenv("API_URL"),
-                    "x-rapidapi-key": os.getenv("API_KEY") }
-        result = requests.get(coachs_url, params=params, headers=headers)
-        rows = result.json().get('response')
-        print(result.json())
-        for row in rows:
-            coachs = row
-            fecha_limite = datetime(2024, 5, 26)
-            coach_career = coachs.get('career')
-            for coach_team in coach_career:
-                start_date = datetime.strptime(coach_team.get('start'), '%Y-%m-%d')
-                end_date = datetime.strptime(coach_team.get('end'), '%Y-%m-%d') if coach_team.get('end') is not None else datetime(9999, 1, 1)
-                if (end_date is None and start_date < fecha_limite) or (end_date is not None and end_date > fecha_limite):
-                    new_coach = Coaches(
-                        uid = coachs.get('id'),
-                        name = coachs.get('name'),
-                        first_name = coachs.get('firstname'),
-                        last_name = coachs.get('lastname'),
-                        nationality = coachs.get('nationality'),
-                        photo = coachs.get('photo'),
-                        team_id = coachs.get('team').get('id'))
-                    print(f'Añadiendo coach')
-                    db.session.add(new_coach)
-                    break
-    # Paso 2: Llamar a /fixtures
-    fixtures_url = f'https://{os.getenv("API_URL")}/fixtures'
-    params = { "league": 140, "season": 2023}
-    headers = { "x-rapidapi-host": os.getenv("API_URL"),
-                "x-rapidapi-key": os.getenv("API_KEY") }
-    result = requests.get(fixtures_url, params=params, headers=headers)
+
+def populate_fixtures(headers, params):
+    url = f'https://{os.getenv("API_URL")}/fixtures'
+    result = requests.get(url, params=params, headers=headers)
     rows = result.json().get('response')
     for row in rows:
-    # Paso 1.2: Subir los teams a BDD
         fixture = row.get('fixture')
         teams = row.get('teams')
         goals = row.get('goals')
-        home_team = teams.get('home')
-        away_team = teams.get('away')
         home_goals = goals.get('home')
         away_goals = goals.get('away')
         new_fixture = Matches(
             uid = fixture.get('id'),
             date = fixture.get('date'),
-            home_team_id = home_team.get('id'),
-            away_team_id = away_team.get('id'),
+            home_team_id = teams.get('home').get('id'),
+            away_team_id = teams.get('ayay').get('id'),
             home_goals = home_goals,
             away_goals = away_goals,
             is_home_winner = home_goals > away_goals)
-        print(f'Añadiendo fixture')
         db.session.add(new_fixture)
-    # PASO 2.2: Subir las fixtures a BDD
+    db.session.commit()
+    return
+
+
+def populate_teams(params, headers):
+    url = f'https://{os.getenv("API_URL")}/teams'
+    result = requests.get(url, params=params, headers=headers)
+    rows = result.json().get('response')
+    teams = []
+    for row in rows:
+        team = row.get('team')
+        new_team = Teams(
+            uid = team.get('id'),
+            name = team.get('name'),
+            logo = team.get('logo'))
+        db.session.add(new_team)
+        teams.append(new_team)
+    db.session.commit()
+    return teams
+
+
+def populate_coach(params, headers):
+    url = f'https://{os.getenv("API_URL")}/coachs'
+    result = requests.get(url, params=params, headers=headers)
+    rows = result.json().get('response')
+    fecha_limite = datetime(2024, 5, 26)
+    for coach in rows:
+        coach_career = coach.get('career')
+        for coach_team in coach_career:
+            start_date = datetime.strptime(coach_team.get('start'), '%Y-%m-%d')
+            end_date = datetime.strptime(coach_team.get('end'), '%Y-%m-%d') if coach_team.get('end') is not None else datetime(9999, 1, 1)
+            if (end_date is None and start_date < fecha_limite) or (end_date is not None and end_date > fecha_limite):
+                new_coach = Coaches(
+                    uid = coach.get('id'),
+                    name = coach.get('name'),
+                    first_name = coach.get('firstname'),
+                    last_name = coach.get('lastname'),
+                    nationality = coach.get('nationality'),
+                    photo = coach.get('photo'),
+                    team_id = coach.get('team').get('id'))
+                db.session.add(new_coach)
+                return  # Evitamos que hayan dos entrenadores por equipo o que el mismo entrenador salga dos veces
+
+
+@api.route('/populate-db-1', methods=['GET'])
+def populate_db():
+    params = { "league": 140, "season": 2023}
+    headers = { "x-rapidapi-host": os.getenv("API_URL"),
+                "x-rapidapi-key": os.getenv("API_KEY") }
+    populate_fixtures(params=params, headers=headers)
+    teams = populate_teams(params=params, headers=headers)
+    for team in teams:
+        params = { "team": team.id }
+        populate_coach(params=params, headers=headers)
     db.session.commit()
     print("Base de datos actualizada correctamente")
     return {}, 200
@@ -210,6 +215,8 @@ def players():
         response_body['message'] = f'Respuesta desde {request.method}'
         response_body['results'] = new_player.serialize()
         return response_body, 201
+
+
 @api.route('/fantasy-leagues', methods=['GET', 'POST'])
 def fantasy_leagues():
     response_body = {}
@@ -357,22 +364,47 @@ def users():
         return response_body, 200
     if request.method == 'POST':
         data = request.json
-        username = data.get('username'),
-        email = data.get('email'),
-        password = data.get('password'),
-        phone_number = data.get('phone_number')
-        # converting password to array of bytes 
-        bytes = str(password).encode('utf-8') 
-        # generating the salt 
+        username = data.get('username', None),
+        email = data.get('email', None),
+        password = data.get('password', None)
+        phone_number = data.get('phone_number', None)
+        bytes = str(password).encode('utf-8')
         salt = bcrypt.gensalt() 
-        # Hashing the password 
-        hash = bcrypt.hashpw(bytes, salt) 
-        new_user = Users(username = username, email = email, password = hash, phone_number = phone_number, is_active = True)
+        hash = bcrypt.hashpw(bytes, salt)
+        new_user = Users(username = username, email = email, password = hash.decode('utf-8'), phone_number = phone_number, is_active = True)
         db.session.add(new_user)
         db.session.commit()
         response_body['message'] = 'Usuario creado correctamente'
         response_body['results'] = new_user.serialize()
         return response_body, 201
+
+
+@api.route('/login', methods=['POST'])
+def login():
+    response_body = {}
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
+    user_row = db.session.execute(db.select(Users).where(Users.email == email, Users.is_active == True)).scalar()
+    if user_row == None:
+        response_body['message'] = 'Usuario no existente'
+        return response_body, 404
+    password_bytes = password.encode('utf-8')
+    user_password_bytes = user_row.password.encode('utf-8')
+    print(user_password_bytes)
+    print(password_bytes)
+    if bcrypt.checkpw(password=password_bytes, hashed_password=user_password_bytes) == True:
+        user_data = user_row.serialize()
+        access_token = create_access_token(identity=email, additional_claims={'user_id': user_data["id"], 'is_active': user_data['is_active']})
+        response_body['message'] = 'Usuario correcto'
+        response_body['access_token'] = access_token
+        response_body['results'] = user_data
+        return response_body, 201
+    else:
+        response_body['message'] = 'Datos incorrectos'
+        return response_body, 400
+
+
 
 @api.route('/users/<int:id>', methods=['GET', 'PUT'])
 def user(id):
@@ -394,9 +426,8 @@ def user(id):
         db.session.commit()
         response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
         response_body['results'] = row.serialize()
-        return response_body, 200
-    
-    
+        return response_body, 200 
+
 
 # CRUD de Fantasy Coach
 @api.route('/fantasy-coaches', methods=['GET', 'POST'])
@@ -422,7 +453,8 @@ def fantasy_coaches():
         response_body['message'] = f'Respuesta desde {request.method}'
         response_body['results'] = new_coach.serialize()
         return response_body, 201
-    
+
+
 @api.route('/fantasy-coaches/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 def fantasy_coach(id):
     response_body = {}
@@ -479,7 +511,8 @@ def fantasy_teams():
         response_body['message'] = f'Respuesta desde {request.method}'
         response_body['results'] = new_team.serialize()
         return response_body, 201
-    
+
+
 @api.route('/fantasy-teams/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 def fantasy_team(id):
     response_body = {}
@@ -510,7 +543,7 @@ def fantasy_team(id):
         db.session.commit()
         response_body['message'] = f'Respuesta desde {request.method}'
         return response_body, 200
-    
+ 
 
 # CRUD de Fantasy Player
 @api.route('/fantasy-players', methods=['GET', 'POST'])
@@ -538,7 +571,8 @@ def fantasy_players():
         response_body['message'] = f'Respuesta desde {request.method}'
         response_body['results'] = new_player.serialize()
         return response_body, 201
-    
+
+
 @api.route('/fantasy-players/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 def fantasy_player(id):
     response_body = {}
