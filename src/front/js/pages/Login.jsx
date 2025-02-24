@@ -4,7 +4,7 @@ import { LoginForm } from "../component/Login/LoginForm.jsx";
 import { SignupForm } from "../component/Login/SignupForm.jsx";
 import { LoginSliderOverlays } from "../component/Login/LoginSliderOverlays.jsx";
 
-export const Home = () => {
+export const Login = () => {
 	const [isLoginActive, setIsLoginActive] = useState(true)
 
 	return (

@@ -391,8 +391,6 @@ def login():
         return response_body, 404
     password_bytes = password.encode('utf-8')
     user_password_bytes = user_row.password.encode('utf-8')
-    print(user_password_bytes)
-    print(password_bytes)
     if bcrypt.checkpw(password=password_bytes, hashed_password=user_password_bytes) == True:
         user_data = user_row.serialize()
         access_token = create_access_token(identity=email, additional_claims={'user_id': user_data["id"], 'is_active': user_data['is_active']})

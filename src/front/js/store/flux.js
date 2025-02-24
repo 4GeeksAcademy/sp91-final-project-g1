@@ -25,7 +25,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 					body: JSON.stringify(dataToSend)
 				})
 				const data = await response.json()
-				console.log(data)
 				return data
 			},
 			signup: async (dataToSend) => {
@@ -38,7 +37,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 					body: JSON.stringify(dataToSend)
 				})
 				const data = await response.json()
-				console.log(data)
 				return data
 			}
 		}
