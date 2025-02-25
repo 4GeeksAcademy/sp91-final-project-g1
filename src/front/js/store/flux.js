@@ -29,6 +29,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					body: JSON.stringify(dataToSend)
 				})
 				const data = await response.json()
+				if (!response.ok) return { status: 400, data: data }
 				localStorage.setItem("user", JSON.stringify(data.results))
 				localStorage.setItem("accessToken", data.access_token)
 				return { status: 200, data: data }

@@ -15,7 +15,7 @@ export const LoginForm = (props) => {
         event.preventDefault()
         if (!checkFormValidity(event)) return
 
-        const body = { email, password }
+        const body = { email: email, password: password }
         const response = await actions.login(body)
         if (response.status === 200) {
             navigate("/home")
