@@ -403,7 +403,6 @@ def login():
         return response_body, 400
 
 
-
 @api.route('/users/<int:id>', methods=['GET', 'PUT'])
 def user(id):
     response_body = {}

@@ -17,10 +17,15 @@ export const SignupForm = (props) => {
         event.preventDefault()
         if (!checkFormValidity(event)) return
 
-        const body = { username, email, password, phone_number: phoneNumber}
+        const body = { 
+            username: username, 
+            email: email, 
+            password: password, 
+            phone_number: phoneNumber
+        }
         const response = await actions.signup(body)
-        if (response.status == 200) {
-            navigate ("/home")
+        if (response.status === 200) {
+            navigate("/home")
         }
     }
 

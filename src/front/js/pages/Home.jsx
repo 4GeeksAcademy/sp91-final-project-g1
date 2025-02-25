@@ -18,7 +18,6 @@ export const Home = () => {
 	
 	const handleLogout =() =>{
 		actions.logout()
-		console.log("hola")
 		navigate("/")
 	}
 	return (

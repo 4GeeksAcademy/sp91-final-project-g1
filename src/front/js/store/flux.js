@@ -35,19 +35,18 @@ const getState = ({ getStore, getActions, setStore }) => {
 			},
 			signup: async (dataToSend) => {
 				const uri = `${process.env.BACKEND_URL}/api/users`
-				const response = await fetch(uri, {
+				await fetch(uri, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
 					},
 					body: JSON.stringify(dataToSend)
 				})
-				const data = await response.json()
-				const body={
+				const body = {
 					email:dataToSend.email,
 					password:dataToSend.password,
 				}
-				const loginResponse= await getActions().login(body)
+				const loginResponse = await getActions().login(body)
 				return loginResponse
 			},
 			logout: async () => {
