@@ -2,6 +2,7 @@ import PropTypes from "prop-types"
 import React, { useContext, useState } from "react"
 import { Context } from "../../store/appContext"
 import { checkFormValidity } from "../../utils"
+import { useNavigate } from "react-router-dom"
 
 export const SignupForm = (props) => {
 
@@ -10,13 +11,17 @@ export const SignupForm = (props) => {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [phoneNumber, setPhoneNumber] = useState("")
+    const navigate = useNavigate()
     
-    const handleSignup = (event) => {
+    const handleSignup = async (event) => {
         event.preventDefault()
         if (!checkFormValidity(event)) return
 
-        const body = { username, email, password, phone_number }
-        actions.signup(body)
+        const body = { username, email, password, phone_number: phoneNumber}
+        const response = await actions.signup(body)
+        if (response.status == 200) {
+            navigate ("/home")
+        }
     }
 
     return (

@@ -2,19 +2,24 @@ import PropTypes from "prop-types"
 import React, { useContext, useState } from "react"
 import { Context } from "../../store/appContext"
 import { checkFormValidity } from "../../utils"
+import { useNavigate } from "react-router-dom"
 
 export const LoginForm = (props) => {
 
     const { actions } = useContext(Context)
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const navigate = useNavigate()
 
-    const handleLogin = (event) => {
+    const handleLogin = async (event) => {
         event.preventDefault()
         if (!checkFormValidity(event)) return
 
         const body = { email, password }
-        actions.login(body)
+        const response = await actions.login(body)
+        if (response.status == 200) {
+            navigate ("/home")
+        }
     }
 
     return (

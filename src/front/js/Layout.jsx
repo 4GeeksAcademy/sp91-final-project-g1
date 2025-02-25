@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import injectContext from "./store/appContext";
 // Custom Components
+import { Home } from "./pages/Home.jsx";
 import ScrollToTop from "./component/ScrollToTop.jsx";
 import { BackendURL } from "./component/BackendURL.jsx";
 import { Navbar } from "./component/Navbar.jsx";
@@ -22,6 +23,7 @@ const Layout = () => {
                 <ScrollToTop>
                     <Navbar />
                     <Routes>
+                        <Route element={<Home />} path="/home" />
                         <Route element={<Login />} path="/" />
                         <Route element={<h1>Not found!</h1>} path='*'/>
                     </Routes>

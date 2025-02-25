@@ -15,6 +15,10 @@ const getState = ({ getStore, getActions, setStore }) => {
 				setStore({ message: data.message })
 				return;
 			},
+			getFromLocalStorage: (key) => {
+				const data = localStorage.getItem(key)
+				return JSON.parse(data)
+			},
 			login: async (dataToSend) => {
 				const uri = `${process.env.BACKEND_URL}/api/login`
 				const response = await fetch(uri, {
@@ -25,7 +29,9 @@ const getState = ({ getStore, getActions, setStore }) => {
 					body: JSON.stringify(dataToSend)
 				})
 				const data = await response.json()
-				return data
+				localStorage.setItem("user", JSON.stringify(data.results))
+				localStorage.setItem("accessToken", data.access_token)
+				return { status: 200, data: data }
 			},
 			signup: async (dataToSend) => {
 				const uri = `${process.env.BACKEND_URL}/api/users`
@@ -37,8 +43,17 @@ const getState = ({ getStore, getActions, setStore }) => {
 					body: JSON.stringify(dataToSend)
 				})
 				const data = await response.json()
-				return data
-			}
+				const body={
+					email:dataToSend.email,
+					password:dataToSend.password,
+				}
+				const loginResponse= await getActions().login(body)
+				return loginResponse
+			},
+			logout: async () => {
+				localStorage.clear()
+			},
+
 		}
 	};
 };
