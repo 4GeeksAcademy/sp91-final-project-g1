@@ -1,21 +1,29 @@
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect  } from "react"
 import { Context } from "../store/appContext";
-import rigoImageUrl from "../../img/rigo-baby.jpg";
-import "../../styles/home.css";
-
+import { useNavigate } from "react-router-dom";
 
 export const Home = () => {
-	const { store, actions } = useContext(Context);
-
+	const { actions } = useContext(Context);
+	const [userName, setUserName] = useState("");
+	const navigate = useNavigate();
+	
+	useEffect(() => {
+        const user = actions.getFromLocalStorage("user");
+		if (!user) {
+			navigate("/")
+			return
+		}
+		setUserName(user.username)
+    }, [])
+	
+	const handleLogout =() =>{
+		actions.logout()
+		navigate("/")
+	}
 	return (
-		<div className="text-center mt-5">
-			<h1>Hello Rigo!!</h1>
-			<p>
-				<img src={rigoImageUrl} />
-			</p>
-			<div className="alert alert-info">
-				{store.message || "Loading message from the backend (make sure your python backend is running)..."}
-			</div>
+		<div className="text-center">
+			<h1>Hola {userName}</h1>
+			<button type="button" class="btn btn-outline-danger " onClick={handleLogout}>Logout</button>
 		</div>
 	);
 };

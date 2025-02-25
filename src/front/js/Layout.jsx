@@ -2,12 +2,13 @@ import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import injectContext from "./store/appContext";
 // Custom Components
+import { Home } from "./pages/Home.jsx";
 import ScrollToTop from "./component/ScrollToTop.jsx";
 import { BackendURL } from "./component/BackendURL.jsx";
 import { Navbar } from "./component/Navbar.jsx";
 import { Footer } from "./component/Footer.jsx";
 // Custom Views
-import { Home } from "./pages/Home.jsx";
+import { Login } from "./pages/Login.jsx";
 
 
 // Create your first component
@@ -18,18 +19,17 @@ const Layout = () => {
     if(!process.env.BACKEND_URL || process.env.BACKEND_URL == "") return <BackendURL/ >;
 
     return (
-        <div>
             <BrowserRouter basename={basename}>
                 <ScrollToTop>
                     <Navbar />
                     <Routes>
-                        <Route element={<Home />} path="/" />
+                        <Route element={<Home />} path="/home" />
+                        <Route element={<Login />} path="/" />
                         <Route element={<h1>Not found!</h1>} path='*'/>
                     </Routes>
                     <Footer />
                 </ScrollToTop>
             </BrowserRouter>
-        </div>
     );
 };
 
