@@ -18,7 +18,7 @@ export const LoginForm = (props) => {
         const body = { email: email, password: password }
         const response = await actions.login(body)
         if (response.status === 200) {
-            navigate("/home")
+            navigate("/my-team")
         }
     }
 

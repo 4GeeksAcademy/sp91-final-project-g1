@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../../styles/home.css";
+import "../../styles/login.css";
 import { LoginForm } from "../component/Login/LoginForm.jsx";
 import { SignupForm } from "../component/Login/SignupForm.jsx";
 import { LoginSliderOverlays } from "../component/Login/LoginSliderOverlays.jsx";

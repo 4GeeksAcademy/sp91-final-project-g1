@@ -39,7 +39,7 @@ def populate_fixtures(headers, params):
             uid = fixture.get('id'),
             date = fixture.get('date'),
             home_team_id = teams.get('home').get('id'),
-            away_team_id = teams.get('ayay').get('id'),
+            away_team_id = teams.get('away').get('id'),
             home_goals = home_goals,
             away_goals = away_goals,
             is_home_winner = home_goals > away_goals)
@@ -88,18 +88,83 @@ def populate_coach(params, headers):
                 return  # Evitamos que hayan dos entrenadores por equipo o que el mismo entrenador salga dos veces
 
 
+def populate_players(initial_params, headers):
+    params = initial_params
+    url = f'https://{os.getenv("API_URL")}/players'
+
+    while True:
+        print(params)
+        result = requests.get(url, params=params, headers=headers)
+        data = result.json()
+        print(data)
+        current = data.get("paging").get("current")
+        total = data.get("paging").get("total")
+        rows = data.get("response")
+        print(f'page {current} of {total} - team: {params.get("team")}')
+        for row in rows:
+            player_row = row.get("player")
+            stats = row.get("statistics")[0]
+            if db.session.execute(db.select(Players).where(Players.uid == player_row.get("id"))).scalar() is not None:
+                print(f'Jugador repetido: {player_row.get("id")} = {player_row.get("firstname")} {player_row.get("lastname")} - team: {stats.get("team").get("id")}')
+                continue
+            player = Players(
+                uid=player_row.get("id"),
+                name=player_row.get("name"),
+                first_name=player_row.get("firstname"),
+                number=0,  # TODO: Quitar esta variable
+                last_name=player_row.get("lastname"),
+                nationality=player_row.get("nationality"),
+                position=stats.get("games").get("position"),
+                photo=player_row.get("photo"),
+                team_id=stats.get("team").get("id")
+            )
+            db.session.add(player)
+        if current == total:
+            print("----------------------------------------")
+            break
+        params["page"] = current + 1
+    db.session.commit()
+    return
+
+
 @api.route('/populate-db-1', methods=['GET'])
 def populate_db():
     params = { "league": 140, "season": 2023}
     headers = { "x-rapidapi-host": os.getenv("API_URL"),
                 "x-rapidapi-key": os.getenv("API_KEY") }
-    populate_fixtures(params=params, headers=headers)
     teams = populate_teams(params=params, headers=headers)
     for team in teams:
-        params = { "team": team.id }
+        params = { "team": team.serialize().get("uid") }
         populate_coach(params=params, headers=headers)
+    populate_fixtures(params=params, headers=headers)
     db.session.commit()
     print("Base de datos actualizada correctamente")
+    return {}, 200
+
+
+"""
+    Ejecutar esta función después de la de arriba, los ids del equipo se pasarán por parámetro. 
+    Hay que hacer varias llamadas debido a la restriccion de 10 peticiones por minuto
+
+    @params peticion 1: ?team_ids=529,530,531
+    @params peticion 2: ?team_ids=532,533,534
+    @params peticion 3: ?team_ids=536,538,541
+    @params peticion 4: ?team_ids=542,543,546
+    @params peticion 5: ?team_ids=547,548,715
+    @params peticion 6: ?team_ids=723,724,727
+    @params peticion 7: ?team_ids=728,798
+"""
+@api.route('/populate-players/', methods=['GET'])
+def populate_db_players():
+    print('hola')
+    ids = request.args.get("team_ids").split(",")
+    for id in ids:
+        params = { "league": 140, "season": 2023, "team": id }
+        headers = { "x-rapidapi-host": os.getenv("API_URL"),
+                "x-rapidapi-key": os.getenv("API_KEY") }
+        populate_players(initial_params=params, headers=headers)
+    db.session.commit()
+    print("Jugadores actualizados")
     return {}, 200
 
 
@@ -178,6 +243,7 @@ def coaches():
         response_body['message'] = f'Respuesta desde {request.method}'
         response_body['results'] = new_coach.serialize()
         return response_body, 201
+
 
 @api.route('/coachs/<int:id>', methods=['GET'])
 def coach(id):

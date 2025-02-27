@@ -162,7 +162,7 @@ class Teams(db.Model):
     def serialize(self):
         return {"uid": self.uid,
                 "name": self.name,
-                "photo": self.photo}
+                "logo": self.logo}
 
 
 class Standings(db.Model):

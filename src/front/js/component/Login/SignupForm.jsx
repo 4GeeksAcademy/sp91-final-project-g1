@@ -25,7 +25,7 @@ export const SignupForm = (props) => {
         }
         const response = await actions.signup(body)
         if (response.status === 200) {
-            navigate("/home")
+            navigate("/my-team")
         }
     }
 
