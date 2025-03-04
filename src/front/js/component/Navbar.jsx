@@ -1,20 +1,43 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import logo from "../../img/logo.png"
 
 
 export const Navbar = () => {
 	return (
-		<nav className="navbar bg-tertiary">
-			<div className="container">
-				<Link to="/">
-					<span className="navbar-brand mb-0 h1">React Boilerplate</span>
-				</Link>
-				<div className="ml-auto">
-					{/* 
-					<Link to="/demo">
-						<button className="btn btn-primary">Check the Context in action</button>
+		<nav className="navbar bg-body-tertiary">
+			<div className="container-fluid d-flex align-items-center">
+				<a className="navbar-brand me-auto ms-5" href="#">
+					<img src={logo} alt="Logo" width="50" />
+				</a>
+				<div className="d-flex justify-content-center flex-grow-1">
+					<ul className="navbar-nav d-flex flex-row gap-5">
+						<li className="nav-item">
+							<Link className="nav-link" to="/standings">
+								Resultados
+							</Link>
+						</li>
+						<li className="nav-item">
+							<Link className="nav-link" to="/my-team">
+								Mi equipo
+							</Link>
+						</li>
+						<li className="nav-item">
+							<Link className="nav-link" to="/my-league">
+								Mi liga
+							</Link>
+						</li>
+						<li className="nav-item">
+							<Link className="nav-link" to="/market">
+								Mercado
+							</Link>
+						</li>
+					</ul>
+				</div>
+				<div className="ms-auto me-5">
+					<Link to="/settings" className="nav-link">
+						<i className="fa-solid fa-user fa-lg"></i>
 					</Link>
-					*/}
 				</div>
 			</div>
 		</nav>
