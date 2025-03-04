@@ -1,7 +1,6 @@
 /* 
     General Styles used on every website (Don't Repeat Yourself)
 */
-
 .position {
     font-weight: 600;
     font-style: italic;
@@ -21,4 +20,8 @@
     &.forward {
         -webkit-text-stroke: 1px #92241c;
     }
+}
+
+.backdrop {
+    background-color: #000000aa;
 }

@@ -13,6 +13,7 @@ import { MyLeague } from "./pages/MyLeague.jsx";
 import { Standings } from "./pages/Standings.jsx";
 import { Market } from "./pages/Market.jsx";
 import { Settings } from "./pages/Settings.jsx";
+import { ResetPassword } from "./pages/ResetPassword.jsx";
 
 
 // Create your first component
@@ -33,6 +34,7 @@ const Layout = () => {
                         <Route element={<MyLeague />} path="/my-league" />
                         <Route element={<Market />} path="/market" />
                         <Route element={<Settings />} path="/settings" />
+                        <Route element={<ResetPassword />} path="/reset-password" />
                         <Route element={<h1>Not found!</h1>} path='*'/>
                     </Routes>
                     <Footer />
