@@ -53,7 +53,84 @@ const getState = ({ getStore, getActions, setStore }) => {
 			logout: async () => {
 				localStorage.clear()
 			},
+			removeBgFromImage: async (imageUrl) => {
+				const url = `${process.env.BACKEND_URL}/api/remove-bg`
 
+				const response = await fetch(url, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						image_url: imageUrl
+					})
+				})
+
+				if (!response.ok) {
+					console.error("ERROR AL QUITAR BACKGROUND")
+					return "ERROR"
+				}
+				const data = await response.json()
+				return `data:image/png;base64,${data.results}`
+			},
+			api: {
+				get: async (endpoint, extraParams) => {
+					const url = `${process.env.BACKEND_URL}/api/${endpoint}${extraParams ? `?${extraParams}` : ''}`
+
+					const response = await fetch(url)
+
+					if(!response.ok) {
+						console.error(`Error ${response.status} al llamar a GET /${endpoint}`)
+						return
+					}
+					const data = await response.json()
+					return data.results
+				},
+				post: async (endpoint, body) => {
+					const url = `${process.env.BACKEND_URL}/api/${endpoint}`
+
+					const response = await fetch(url, {
+						method: 'POST',
+						body: JSON.stringify(body)
+					})
+
+					if(!response.ok) {
+						console.error(`Error ${response.status} al llamar a POST /${endpoint}`)
+						return
+					}
+					const data = await response.json()
+					return data.results
+				},
+				put: async (endpoint, extraParams, body) => {
+					const url = `${process.env.BACKEND_URL}/api/${endpoint}${extraParams ? `?${extraParams}` : ''}`
+
+					const response = await fetch(url, {
+						method: 'PUT',
+						body: JSON.stringify(body)
+					})
+
+					if(!response.ok) {
+						console.error(`Error ${response.status} al llamar a PUT /${endpoint}${extraParams ? `?${extraParams}` : ''}`)
+						return
+					}
+					const data = await response.json()
+					return data.results
+				},
+				delete: async (endpoint, extraParams) => {
+					const url = `${process.env.BACKEND_URL}/api/${endpoint}${extraParams ? `?${extraParams}` : ''}`
+
+					const response = await fetch(url, {
+						method: 'DELETE'
+					})
+
+					if(!response.ok) {
+						console.error(`Error ${response.status} al llamar a DELETE /${endpoint}${extraParams ? `?${extraParams}` : ''}`)
+						return
+					}
+					const data = await response.json()
+					return data.results
+				},
+			}
 		}
 	};
 };

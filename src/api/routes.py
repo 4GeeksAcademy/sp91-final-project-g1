@@ -11,6 +11,10 @@ from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from api.models import db, Teams, Matches, Coaches, Players, FantasyCoaches, FantasyTeams, FantasyPlayers, Users, FantasyLeagues, FantasyStandings, FantasyLeagueTeams
 from datetime import datetime
+import numpy as np
+import cv2
+import urllib.request
+import base64
 
 
 api = Blueprint('api', __name__)
@@ -70,12 +74,16 @@ def populate_coach(params, headers):
     result = requests.get(url, params=params, headers=headers)
     rows = result.json().get('response')
     fecha_limite = datetime(2024, 5, 26)
+    print(result.json())
     for coach in rows:
         coach_career = coach.get('career')
         for coach_team in coach_career:
             start_date = datetime.strptime(coach_team.get('start'), '%Y-%m-%d')
             end_date = datetime.strptime(coach_team.get('end'), '%Y-%m-%d') if coach_team.get('end') is not None else datetime(9999, 1, 1)
             if (end_date is None and start_date < fecha_limite) or (end_date is not None and end_date > fecha_limite):
+                if db.session.execute(db.select(Coaches).where(Coaches.uid == coach.get("id"))).scalar() is not None:
+                    print(f'Entrenador repetido: {coach.get("id")} = {coach.get("firstname")} {coach.get("lastname")}')
+                    return
                 new_coach = Coaches(
                     uid = coach.get('id'),
                     name = coach.get('name'),
@@ -93,10 +101,8 @@ def populate_players(initial_params, headers):
     url = f'https://{os.getenv("API_URL")}/players'
 
     while True:
-        print(params)
         result = requests.get(url, params=params, headers=headers)
         data = result.json()
-        print(data)
         current = data.get("paging").get("current")
         total = data.get("paging").get("total")
         rows = data.get("response")
@@ -110,13 +116,13 @@ def populate_players(initial_params, headers):
             player = Players(
                 uid=player_row.get("id"),
                 name=player_row.get("name"),
-                first_name=player_row.get("firstname"),
+                first_name=player_row.get("firstname") if player_row.get("firstname") is not None else "",
                 number=0,  # TODO: Quitar esta variable
-                last_name=player_row.get("lastname"),
+                last_name=player_row.get("lastname") if player_row.get("lastname") is not None else "",
                 nationality=player_row.get("nationality"),
                 position=stats.get("games").get("position"),
                 photo=player_row.get("photo"),
-                team_id=stats.get("team").get("id")
+                team_id=params.get("team")
             )
             db.session.add(player)
         if current == total:
@@ -132,10 +138,7 @@ def populate_db():
     params = { "league": 140, "season": 2023}
     headers = { "x-rapidapi-host": os.getenv("API_URL"),
                 "x-rapidapi-key": os.getenv("API_KEY") }
-    teams = populate_teams(params=params, headers=headers)
-    for team in teams:
-        params = { "team": team.serialize().get("uid") }
-        populate_coach(params=params, headers=headers)
+    populate_teams(params=params, headers=headers)
     populate_fixtures(params=params, headers=headers)
     db.session.commit()
     print("Base de datos actualizada correctamente")
@@ -154,9 +157,8 @@ def populate_db():
     @params peticion 6: ?team_ids=723,724,727
     @params peticion 7: ?team_ids=728,798
 """
-@api.route('/populate-players/', methods=['GET'])
+@api.route('/populate-players', methods=['GET'])
 def populate_db_players():
-    print('hola')
     ids = request.args.get("team_ids").split(",")
     for id in ids:
         params = { "league": 140, "season": 2023, "team": id }
@@ -165,6 +167,26 @@ def populate_db_players():
         populate_players(initial_params=params, headers=headers)
     db.session.commit()
     print("Jugadores actualizados")
+    return {}, 200
+
+
+"""
+    Ejecutar esta función después de /populate-db-1, los ids del equipo se pasarán por parámetro. 
+    Hay que hacer varias llamadas debido a la restriccion de 10 peticiones por minuto
+
+    @params peticion 1: ?team_ids=529,530,531,532,533,534,536,538,541,542
+    @params peticion 2: ?team_ids=543,546,547,548,715,723,724,727,728,798
+"""
+@api.route('/populate-coaches', methods=['GET'])
+def populate_db_coaches():
+    ids = request.args.get("team_ids").split(",")
+    headers = { "x-rapidapi-host": os.getenv("API_URL"),
+                "x-rapidapi-key": os.getenv("API_KEY") }
+    for id in ids:
+        params = { "team": id }
+        populate_coach(params=params, headers=headers)
+    db.session.commit()
+    print("Entrenadores actualizados")
     return {}, 200
 
 
@@ -253,6 +275,28 @@ def coach(id):
         response_body['message'] = "Coach not found"
         return response_body, 404
 
+"""
+@api.route('/players-market', methods=['GET'])
+def players_market():
+    limit = request.args.get("limit")
+    response_body = {}
+    players_rows = db.session.execute(db.select(Players).limit(limit)).scalars()
+
+    def serialize(row):
+        serialized_row = row.serialize()
+        team_row = db.session.execute(db.select(Teams).where(Teams.uid == row.team_id)).scalar()
+        if team_row == None:
+            return serialized_row
+        team = team_row.serialize()
+        serialized_row["team"] = team
+        return serialized_row
+    
+    result = [serialize(row) for row in players_rows]
+    
+    response_body['message'] = "List of players"
+    response_body['results'] = result
+    return response_body, 200
+"""
 
 # CRUD de Players
 @api.route('/players', methods=['GET', 'POST'])
@@ -264,7 +308,7 @@ def players():
         response_body['message'] = "List of players"
         response_body['results'] = result
         return response_body, 200
-    
+
     if request.method == 'POST':
         data = request.json
         new_player = Players(
@@ -548,7 +592,7 @@ def fantasy_coach(id):
         db.session.commit()
         response_body['message'] = f'Respuesta desde {request.method}'
         return response_body, 200
-    
+
 
 # CRUD de Fantasy Team
 @api.route('/fantasy-teams', methods=['GET', 'POST'])
@@ -668,3 +712,46 @@ def fantasy_player(id):
         db.session.commit()
         response_body['message'] = f'Respuesta desde {request.method}'
         return response_body, 200
+
+
+@api.route('/remove-bg', methods=['POST'])
+def remove_bg():
+    response_body = {}
+    data = request.json
+    req = urllib.request.urlopen(data.get("image_url"))
+    arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
+    img = cv2.imdecode(arr, -1)
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    Z = img.reshape((-1, 3))
+    Z = np.float32(Z)
+
+    K = 3
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    _, labels, centers = cv2.kmeans(Z, K, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+
+    centers = np.uint8(centers)
+    dominant_colors = centers[np.argmax(np.bincount(labels.flatten()))]
+
+    dominant_hsv = cv2.cvtColor(np.uint8([[dominant_colors]]), cv2.COLOR_BGR2HSV)[0][0]
+
+    lower_white = np.array([0, 0, dominant_hsv[2] - 5], dtype=np.uint8)
+    upper_white = np.array([255, 5, 255], dtype=np.uint8)
+
+    mask = cv2.inRange(hsv, lower_white, upper_white)
+
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for cnt in contours:
+        if cv2.contourArea(cnt) < 2000:
+            cv2.drawContours(mask, [cnt], -1, 0, -1)
+
+    kernel = np.ones((3, 3), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
+    img[:, :, 3] = 255 - mask
+
+    _, buffer = cv2.imencode(".png", img)
+    response_body['results'] = base64.b64encode(buffer).decode("utf-8")
+    return response_body, 200
