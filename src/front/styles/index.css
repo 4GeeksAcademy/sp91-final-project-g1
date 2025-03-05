@@ -1,6 +1,27 @@
 /* 
     General Styles used on every website (Don't Repeat Yourself)
 */
-.backdrop{
+.position {
+    font-weight: 600;
+    font-style: italic;
+
+    &.goalkeeper {
+        -webkit-text-stroke: 1px #0d5e6b;
+    }
+
+    &.defender {
+        -webkit-text-stroke: 1px #134e25;
+    }
+
+    &.midfielder {
+        -webkit-text-stroke: 1px #a27c2a;
+    }
+
+    &.forward {
+        -webkit-text-stroke: 1px #92241c;
+    }
+}
+
+.backdrop {
     background-color: #000000aa;
 }
