@@ -32,8 +32,8 @@ export const Settings = () => {
                     email: email,
                     phone_number: phoneNumber,
                 };
-                console.log("Datos del usuario actualizados:", userData);
                 actions.updateUser(userData);
+                setShowModal(false);
             }, 
             acceptButtonLabel: "Guardar cambios",
             acceptButtonType: "success"
@@ -48,6 +48,7 @@ export const Settings = () => {
             body: <p>¿Estás seguro de que deseas eliminar tu cuenta? <strong>Esta opción es irreversible y se eliminarán tus datos.</strong></p>,
             onAccept: () => {
                 actions.deleteUser();
+                navigate('/')
             },
             acceptButtonLabel: "Eliminar",
             acceptButtonType: "danger"

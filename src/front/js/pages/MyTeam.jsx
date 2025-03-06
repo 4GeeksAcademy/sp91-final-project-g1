@@ -1,30 +1,16 @@
-import React, { useContext, useState, useEffect } from "react"
+import React, { useContext, useState } from "react"
 import { Context } from "../store/appContext";
-import { useNavigate } from "react-router-dom";
 import { LineUp } from "../component/LineUp.jsx";
 import { Bench } from "../component/Bench.jsx";
 import { TeamData } from "../component/TeamData.jsx";
 import { Overlay } from "../component/Overlay.jsx";
+import { useProtectedPage } from "../hooks/useProtectedPage.js";
 
 export const MyTeam = () => {
 	const [hasLeague, setHasLeague] = useState(false);
 	const { actions } = useContext(Context);
-	const [userName, setUserName] = useState("");
-	const navigate = useNavigate();
+	const user = useProtectedPage();
 
-	useEffect(() => {
-		const user = actions.getFromLocalStorage("user");
-		if (!user) {
-			navigate("/")
-			return
-		}
-		setUserName(user.username)
-	}, [])
-
-	const handleLogout = () => {
-		actions.logout()
-		navigate("/")
-	}
 	return (
 		<div className="container-fluid row">
 		   {!hasLeague && <Overlay />} 

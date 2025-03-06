@@ -137,7 +137,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					method: 'PUT',
 					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${localStorage.getItem("token")}`
+						Authorization: `Bearer ${localStorage.getItem("accessToken")}`
 					},
 					body: JSON.stringify(dataToSend)
 				};
@@ -148,14 +148,14 @@ const getState = ({ getStore, getActions, setStore }) => {
 					return;
 				}
 				const data = await response.json();
-				setStore({ user: data });
+				localStorage.setItem("user", JSON.stringify(data.results))
 			},
 			deleteUser: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/delete-user`
 				const options = {
 					method: 'DELETE',
 					headers: {
-						'Authorization': `Bearer ${localStorage.getItem("token")}`
+						Authorization: `Bearer ${localStorage.getItem("accessToken")}`
 					},
 				};
 				const response = await fetch(uri, options);
@@ -164,17 +164,17 @@ const getState = ({ getStore, getActions, setStore }) => {
 					console.error("Error: ", response.status, response.statusText);
 					return;
 				}
-				localStorage.removeItem("token");
+				localStorage.removeItem("accessToken");
 				setStore({ user: null });
 			},
-			ResetPassword: async (password) => {
+			resetPassword: async (password) => {
 				console.log("Contraseña recibida en ResetPassword:", password);
 				const uri = `${process.env.BACKEND_URL}/api/reset-password`;
 				const options = {
 					method: 'PUT',
 					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${localStorage.getItem("token")}`
+						Authorization: `Bearer ${localStorage.getItem("accessToken")}`
 					},
 					body: JSON.stringify({ password }) 
 				};
@@ -186,7 +186,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 				const data = await response.json();
 				console.log(data);
-				return;
+				return data;
 			},			
 		},
 	}

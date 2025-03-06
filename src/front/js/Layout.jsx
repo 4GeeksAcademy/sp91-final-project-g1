@@ -7,7 +7,6 @@ import ScrollToTop from "./component/ScrollToTop.jsx";
 import { BackendURL } from "./component/BackendURL.jsx";
 import { Navbar } from "./component/Navbar.jsx";
 import { Footer } from "./component/Footer.jsx";
-import { ProtectedPages } from "./component/ProtectedPages.jsx";
 // Custom Views
 import { Login } from "./pages/Login.jsx";
 import { MyLeague } from "./pages/MyLeague.jsx";
@@ -31,12 +30,10 @@ const Layout = () => {
                 <Routes>
                     <Route element={<Login />} path="/" />
                     <Route element={<Standings />} path="/standings" />
-                    <Route element={<ProtectedPages />}>
-                        <Route element={<MyTeam />} path="/my-team" />
-                        <Route element={<MyLeague />} path="/my-league" />
-                        <Route element={<Market />} path="/market" />
-                        <Route element={<Settings />} path="/settings" />
-                    </Route>
+                    <Route element={<MyTeam />} path="/my-team" />
+                    <Route element={<MyLeague />} path="/my-league" />
+                    <Route element={<Market />} path="/market" />
+                    <Route element={<Settings />} path="/settings" />
                     <Route element={<ResetPassword />} path="/reset-password" />
                     <Route element={<h1>Not found!</h1>} path='*' />
                 </Routes>

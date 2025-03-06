@@ -12,9 +12,9 @@ from flask_cors import CORS
 from api.models import db, Teams, Matches, Coaches, Players, FantasyCoaches, FantasyTeams, FantasyPlayers, Users, FantasyLeagues, FantasyStandings, FantasyLeagueTeams
 from datetime import datetime
 import numpy as np
-import cv2
 import urllib.request
 import base64
+import cv2
 
 
 api = Blueprint('api', __name__)
@@ -463,6 +463,12 @@ def fantasy_standing(id):
         return response_body, 200
 
 
+def generate_password_hash(password):
+    bytes = str(password).encode('utf-8')
+    salt = bcrypt.gensalt() 
+    hash = bcrypt.hashpw(bytes, salt)
+    return hash.decode("utf-8")
+
 @api.route('/users', methods=['GET', 'POST'])
 def users():
     response_body = {}
@@ -478,10 +484,8 @@ def users():
         email = data.get('email', None),
         password = data.get('password', None)
         phone_number = data.get('phone_number', None)
-        bytes = str(password).encode('utf-8')
-        salt = bcrypt.gensalt() 
-        hash = bcrypt.hashpw(bytes, salt)
-        new_user = Users(username = username, email = email, password = hash.decode('utf-8'), phone_number = phone_number, is_active = True)
+        hash_password = generate_password_hash(password)
+        new_user = Users(username = username, email = email, password = hash_password, phone_number = phone_number, is_active = True)
         db.session.add(new_user)
         db.session.commit()
         response_body['message'] = 'Usuario creado correctamente'
@@ -503,7 +507,7 @@ def login():
     user_password_bytes = user_row.password.encode('utf-8')
     if bcrypt.checkpw(password=password_bytes, hashed_password=user_password_bytes) == True:
         user_data = user_row.serialize()
-        access_token = create_access_token(identity=email, additional_claims={'user_id': user_data["id"], 'is_active': user_data['is_active']})
+        access_token = create_access_token(identity=str(user_data["id"]), additional_claims={'user_id': user_data["id"], 'is_active': user_data['is_active']})
         response_body['message'] = 'Usuario correcto'
         response_body['access_token'] = access_token
         response_body['results'] = user_data
@@ -762,12 +766,12 @@ def remove_bg():
 @jwt_required()
 def update_user():
     user_id = get_jwt_identity()
-    data = request.get_json() or {}
-
-    user = db.session.get(Users, user_id) 
+    data = request.json
+    print(user_id)
+    user = db.session.execute(db.select(Users).where(Users.id == user_id)).scalar()
     if not user:
         return jsonify({"message": "Usuario no encontrado"}), 404
-
+    
     user.username = data.get("username", user.username)
     user.email = data.get("email", user.email)
     user.phone_number = data.get("phone_number", user.phone_number)
@@ -776,9 +780,7 @@ def update_user():
 
     return jsonify({
         "message": "Datos actualizados correctamente",
-        "username": user.username,
-        "email": user.email,
-        "phone_number": user.phone_number
+        "results": user.serialize()
     }), 200
 
 
@@ -796,3 +798,28 @@ def delete_user():
     db.session.commit()
 
     return jsonify({"message": "Cuenta eliminada correctamente"}), 200
+
+
+# CRUD Cambiar Contraseña
+@api.route('/reset-password', methods=['PUT'])
+@jwt_required()
+def reset_password():
+    user_id = get_jwt_identity()
+    data = request.json
+    print(data)
+    new_password = data.get("password")
+
+    user = db.session.get(Users, user_id) 
+    if not user:
+        return jsonify({"message": "Usuario no encontrado"}), 404
+    print(user)
+    
+    user.password = generate_password_hash(new_password)
+
+    db.session.commit()
+    print("Se ha guardado en base de datos")
+
+    return jsonify({
+        "message": "Contraseña actualizada correctamente"
+    }), 200
+

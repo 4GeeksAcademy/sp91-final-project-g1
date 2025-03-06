@@ -21,7 +21,7 @@ export const ResetPassword = (props) => {
 
         const body = { password };
 
-        const response = await actions.ResetPassword(body)
+        const response = await actions.resetPassword(body)
         if (response.status === 200) {
             navigate("/")
         }
