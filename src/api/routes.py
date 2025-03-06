@@ -1,12 +1,12 @@
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
-from flask_jwt_extended import create_access_token
 import requests
 import dotenv
 import os
 import bcrypt
 from flask import Flask, request, jsonify, url_for, Blueprint
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from api.models import db, Teams, Matches, Coaches, Players, FantasyCoaches, FantasyTeams, FantasyPlayers, Users, FantasyLeagues, FantasyStandings, FantasyLeagueTeams
@@ -755,3 +755,44 @@ def remove_bg():
     _, buffer = cv2.imencode(".png", img)
     response_body['results'] = base64.b64encode(buffer).decode("utf-8")
     return response_body, 200
+
+
+#CRUD Actualizar Datos Usuario
+@api.route('/update-user', methods=['PUT'])
+@jwt_required()
+def update_user():
+    user_id = get_jwt_identity()
+    data = request.get_json() or {}
+
+    user = db.session.get(Users, user_id) 
+    if not user:
+        return jsonify({"message": "Usuario no encontrado"}), 404
+
+    user.username = data.get("username", user.username)
+    user.email = data.get("email", user.email)
+    user.phone_number = data.get("phone_number", user.phone_number)
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Datos actualizados correctamente",
+        "username": user.username,
+        "email": user.email,
+        "phone_number": user.phone_number
+    }), 200
+
+
+# CRUD Eliminar Usuario
+@api.route('/delete-user', methods=['DELETE'])
+@jwt_required()
+def delete_user():
+    user_id = get_jwt_identity()
+    
+    user = db.session.get(Users, user_id)
+    if not user:
+        return jsonify({"message": "Usuario no encontrado"}), 404
+
+    db.session.delete(user)
+    db.session.commit()
+
+    return jsonify({"message": "Cuenta eliminada correctamente"}), 200

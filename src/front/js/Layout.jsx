@@ -7,6 +7,7 @@ import ScrollToTop from "./component/ScrollToTop.jsx";
 import { BackendURL } from "./component/BackendURL.jsx";
 import { Navbar } from "./component/Navbar.jsx";
 import { Footer } from "./component/Footer.jsx";
+import { ProtectedPages } from "./component/ProtectedPages.jsx";
 // Custom Views
 import { Login } from "./pages/Login.jsx";
 import { MyLeague } from "./pages/MyLeague.jsx";
@@ -21,25 +22,27 @@ const Layout = () => {
     // The basename is used when your project is published in a subdirectory and not in the root of the domain
     // you can set the basename on the .env file located at the root of this project, E.g: BASENAME=/react-hello-webapp/
     const basename = process.env.BASENAME || "";
-    if(!process.env.BACKEND_URL || process.env.BACKEND_URL == "") return <BackendURL/ >;
+    if (!process.env.BACKEND_URL || process.env.BACKEND_URL == "") return <BackendURL />;
 
     return (
-            <BrowserRouter basename={basename}>
-                <ScrollToTop>
-                    <Navbar />
-                    <Routes>
-                        <Route element={<Login />} path="/" />
+        <BrowserRouter basename={basename}>
+            <ScrollToTop>
+                <Navbar />
+                <Routes>
+                    <Route element={<Login />} path="/" />
+                    <Route element={<Standings />} path="/standings" />
+                    <Route element={<ProtectedPages />}>
                         <Route element={<MyTeam />} path="/my-team" />
-                        <Route element={<Standings />} path="/standings" />
                         <Route element={<MyLeague />} path="/my-league" />
                         <Route element={<Market />} path="/market" />
                         <Route element={<Settings />} path="/settings" />
-                        <Route element={<ResetPassword />} path="/reset-password" />
-                        <Route element={<h1>Not found!</h1>} path='*'/>
-                    </Routes>
-                    <Footer />
-                </ScrollToTop>
-            </BrowserRouter>
+                    </Route>
+                    <Route element={<ResetPassword />} path="/reset-password" />
+                    <Route element={<h1>Not found!</h1>} path='*' />
+                </Routes>
+                <Footer />
+            </ScrollToTop>
+        </BrowserRouter>
     );
 };
 

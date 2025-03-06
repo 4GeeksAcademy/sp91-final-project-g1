@@ -44,8 +44,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 					body: JSON.stringify(dataToSend)
 				})
 				const body = {
-					email:dataToSend.email,
-					password:dataToSend.password,
+					email: dataToSend.email,
+					password: dataToSend.password,
 				}
 				const loginResponse = await getActions().login(body)
 				return loginResponse
@@ -130,9 +130,66 @@ const getState = ({ getStore, getActions, setStore }) => {
 					const data = await response.json()
 					return data.results
 				},
-			}
-		}
-	};
+			},
+			updateUser: async (dataToSend) => {
+				const uri = `${process.env.BACKEND_URL}/api/update-user`
+				const options = {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${localStorage.getItem("token")}`
+					},
+					body: JSON.stringify(dataToSend)
+				};
+				const response = await fetch(uri, options);
+
+				if (!response.ok) {
+					console.error("Error :", response.status, response.statusText);
+					return;
+				}
+				const data = await response.json();
+				setStore({ user: data });
+			},
+			deleteUser: async () => {
+				const uri = `${process.env.BACKEND_URL}/api/delete-user`
+				const options = {
+					method: 'DELETE',
+					headers: {
+						'Authorization': `Bearer ${localStorage.getItem("token")}`
+					},
+				};
+				const response = await fetch(uri, options);
+
+				if (!response.ok) {
+					console.error("Error: ", response.status, response.statusText);
+					return;
+				}
+				localStorage.removeItem("token");
+				setStore({ user: null });
+			},
+			ResetPassword: async (password) => {
+				console.log("Contraseña recibida en ResetPassword:", password);
+				const uri = `${process.env.BACKEND_URL}/api/reset-password`;
+				const options = {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${localStorage.getItem("token")}`
+					},
+					body: JSON.stringify({ password }) 
+				};
+				const response = await fetch(uri, options);
+			
+				if (!response.ok) {
+					console.error("Error en ResetPassword:", response.status, response.statusText);
+					return;
+				}
+				const data = await response.json();
+				console.log(data);
+				return;
+			},			
+		},
+	}
 };
 
 export default getState;

@@ -7,22 +7,25 @@ export const ResetPassword = (props) => {
     const { actions } = useContext(Context)
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
+    const [error, setError] = useState(null)
     const navigate = useNavigate();
 
     const handleResetPassword = async (event) => {
         event.preventDefault()
-        if (!checkFormValidity(event)) return
+        if (!checkFormValidity(event)) return;
 
-        const body = {
-            password: password,
-            confirmPassword: confirmPassword,
+        if (password !== confirmPassword) {
+            setError("Las contraseñas no coinciden");
+            return;
         }
+
+        const body = { password };
 
         const response = await actions.ResetPassword(body)
         if (response.status === 200) {
             navigate("/")
         }
-    }
+    };
 
     return (
         <div className={`d-flex justify-content-center my-auto sign-form ${!props.ResetPassword && 'active'}`}>

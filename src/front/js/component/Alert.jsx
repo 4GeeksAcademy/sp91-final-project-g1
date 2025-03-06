@@ -16,7 +16,7 @@ export const MyAlert = (props) => {
 }
 
 MyAlert.propTypes = {
-    showAlert: PropTypes.boolean,
+    showAlert: PropTypes.bool,
     alertData: PropTypes.object,
 }
 

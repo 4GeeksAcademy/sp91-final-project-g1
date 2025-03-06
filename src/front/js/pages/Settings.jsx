@@ -8,10 +8,10 @@ import { MyAlert as Alert } from "../component/Alert.jsx";
 
 export const Settings = () => {
 
-    const { actions } = useContext(Context)
-    const [userName, setUserName] = useState("")
-    const [email, setEmail] = useState("")
-    const [phoneNumber, setPhoneNumber] = useState("")
+    const { actions } = useContext(Context);
+    const [userName, setUserName] = useState("");
+    const [email, setEmail] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
 
     const [modalData, setModalData] = useState({ title: "", body: "", onAccept: () => { }, acceptButtonLabel: "", acceptButtonType: "primary" })
     const [showModal, setShowModal] = useState(false);
@@ -20,13 +20,21 @@ export const Settings = () => {
     const [showAlert, setShowAlert] = useState(false);
 
     const navigate = useNavigate()
-    const handleShow = () => setShow(true);
+    const handleShow = () => setShowModal(true);
 
     const handleShowSaveChanges = () => {
         const data = {
             title: "Guardar datos",
             body: "¿Deseas guardar los datos cambiados?",
-            onAccept: () => { }, // TODO: llamar a funcion de flux
+            onAccept: () => {
+                const userData = {
+                    username: userName,
+                    email: email,
+                    phone_number: phoneNumber,
+                };
+                console.log("Datos del usuario actualizados:", userData);
+                actions.updateUser(userData);
+            }, 
             acceptButtonLabel: "Guardar cambios",
             acceptButtonType: "success"
         }
@@ -38,7 +46,9 @@ export const Settings = () => {
         const data = {
             title: "Eliminar cuenta",
             body: <p>¿Estás seguro de que deseas eliminar tu cuenta? <strong>Esta opción es irreversible y se eliminarán tus datos.</strong></p>,
-            onAccept: () => { }, //TODO: llamar a función de flux
+            onAccept: () => {
+                actions.deleteUser();
+            },
             acceptButtonLabel: "Eliminar",
             acceptButtonType: "danger"
         }
