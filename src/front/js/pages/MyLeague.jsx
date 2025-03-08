@@ -1,9 +1,10 @@
 import React from "react";
 import { Table } from "../component/Table/Table.jsx";
 import { TableStandings } from "../component/Table/TableStandings.jsx";
+import { useProtectedPage } from "../hooks/useProtectedPage.js";
 
 export const MyLeague = () => {
-
+    const user = useProtectedPage();
     const headers = [
         { label: "#", style: { width: '20px' } }, 
         { label: "Club", style: { width: '200px' } }, 

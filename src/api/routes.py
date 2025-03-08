@@ -74,7 +74,6 @@ def populate_coach(params, headers):
     result = requests.get(url, params=params, headers=headers)
     rows = result.json().get('response')
     fecha_limite = datetime(2024, 5, 26)
-    print(result.json())
     for coach in rows:
         coach_career = coach.get('career')
         for coach_team in coach_career:
@@ -480,6 +479,10 @@ def users():
         return response_body, 200
     if request.method == 'POST':
         data = request.json
+        user_existing = db.session.execute(db.select(Users).where(Users.email == data.get("email"))).scalar()
+        if user_existing is not None: 
+            response_body["message"] = "Usuario ya existente"
+            return response_body, 403
         username = data.get('username', None),
         email = data.get('email', None),
         password = data.get('password', None)
@@ -765,12 +768,13 @@ def remove_bg():
 @api.route('/update-user', methods=['PUT'])
 @jwt_required()
 def update_user():
+    response_body = {}
     user_id = get_jwt_identity()
     data = request.json
-    print(user_id)
     user = db.session.execute(db.select(Users).where(Users.id == user_id)).scalar()
     if not user:
-        return jsonify({"message": "Usuario no encontrado"}), 404
+        response_body["message"] = "Usuario no encontrado"
+        return response_body, 404
     
     user.username = data.get("username", user.username)
     user.email = data.get("email", user.email)
@@ -778,48 +782,48 @@ def update_user():
 
     db.session.commit()
 
-    return jsonify({
-        "message": "Datos actualizados correctamente",
-        "results": user.serialize()
-    }), 200
+    response_body["message"] = "Datos actualizados correctamente",
+    response_body["results"] = user.serialize()
+    return response_body, 200
 
 
 # CRUD Eliminar Usuario
 @api.route('/delete-user', methods=['DELETE'])
 @jwt_required()
 def delete_user():
+    response_body = {}
     user_id = get_jwt_identity()
     
     user = db.session.get(Users, user_id)
     if not user:
-        return jsonify({"message": "Usuario no encontrado"}), 404
+        response_body["message"] = "Usuario no encontrado"
+        return response_body, 404
 
     db.session.delete(user)
     db.session.commit()
 
-    return jsonify({"message": "Cuenta eliminada correctamente"}), 200
+    response_body["message"] = "Cuenta eliminada correctamente"
+    return response_body, 200
 
 
 # CRUD Cambiar Contraseña
 @api.route('/reset-password', methods=['PUT'])
 @jwt_required()
 def reset_password():
+    response_body = {}
     user_id = get_jwt_identity()
     data = request.json
-    print(data)
     new_password = data.get("password")
 
     user = db.session.get(Users, user_id) 
     if not user:
-        return jsonify({"message": "Usuario no encontrado"}), 404
-    print(user)
+        response_body["message"] = "Usuario no encontrado"
+        return response_body, 404
     
     user.password = generate_password_hash(new_password)
 
     db.session.commit()
-    print("Se ha guardado en base de datos")
 
-    return jsonify({
-        "message": "Contraseña actualizada correctamente"
-    }), 200
+    response_body["message"] = "Contraseña actualizada correctamente"
+    return response_body, 200
 

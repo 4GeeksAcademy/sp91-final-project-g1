@@ -14,6 +14,7 @@ import { Standings } from "./pages/Standings.jsx";
 import { Market } from "./pages/Market.jsx";
 import { Settings } from "./pages/Settings.jsx";
 import { ResetPassword } from "./pages/ResetPassword.jsx";
+import { HomePage } from "./pages/HomePage.jsx";
 
 
 // Create your first component
@@ -28,7 +29,8 @@ const Layout = () => {
             <ScrollToTop>
                 <Navbar />
                 <Routes>
-                    <Route element={<Login />} path="/" />
+                    <Route element={<HomePage />} path="/" />
+                    <Route element={<Login />} path="/login" />
                     <Route element={<Standings />} path="/standings" />
                     <Route element={<MyTeam />} path="/my-team" />
                     <Route element={<MyLeague />} path="/my-league" />

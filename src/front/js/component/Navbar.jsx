@@ -5,7 +5,8 @@ import { Context } from "../store/appContext";
 
 
 export const Navbar = () => {
-	const { store } = useContext(Context)
+	const { actions } = useContext(Context)
+	const user = actions.getFromLocalStorage("user")
 
 	return (
 		<nav className="navbar bg-body-tertiary">
@@ -20,7 +21,7 @@ export const Navbar = () => {
 								Resultados
 							</Link>
 						</li>
-						{store.user && (
+						{user && (
 							<>
 								<li className="nav-item">
 									<Link className="nav-link" to="/my-team">
@@ -42,7 +43,7 @@ export const Navbar = () => {
 					</ul>
 				</div>
 				<div className="ms-auto me-5">
-					{store.user && (
+					{user && (
 						<Link to="/settings" className="nav-link">
 							<i className="fa-solid fa-user fa-lg"></i>
 						</Link>
