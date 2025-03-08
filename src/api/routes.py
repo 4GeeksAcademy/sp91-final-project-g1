@@ -1,20 +1,20 @@
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
-from flask_jwt_extended import create_access_token
 import requests
 import dotenv
 import os
 import bcrypt
 from flask import Flask, request, jsonify, url_for, Blueprint
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from api.models import db, Teams, Matches, Coaches, Players, FantasyCoaches, FantasyTeams, FantasyPlayers, Users, FantasyLeagues, FantasyStandings, FantasyLeagueTeams
 from datetime import datetime
 import numpy as np
-import cv2
 import urllib.request
 import base64
+import cv2
 
 
 api = Blueprint('api', __name__)
@@ -74,7 +74,6 @@ def populate_coach(params, headers):
     result = requests.get(url, params=params, headers=headers)
     rows = result.json().get('response')
     fecha_limite = datetime(2024, 5, 26)
-    print(result.json())
     for coach in rows:
         coach_career = coach.get('career')
         for coach_team in coach_career:
@@ -463,6 +462,12 @@ def fantasy_standing(id):
         return response_body, 200
 
 
+def generate_password_hash(password):
+    bytes = str(password).encode('utf-8')
+    salt = bcrypt.gensalt() 
+    hash = bcrypt.hashpw(bytes, salt)
+    return hash.decode("utf-8")
+
 @api.route('/users', methods=['GET', 'POST'])
 def users():
     response_body = {}
@@ -474,14 +479,16 @@ def users():
         return response_body, 200
     if request.method == 'POST':
         data = request.json
+        user_existing = db.session.execute(db.select(Users).where(Users.email == data.get("email"))).scalar()
+        if user_existing is not None: 
+            response_body["message"] = "Usuario ya existente"
+            return response_body, 403
         username = data.get('username', None),
         email = data.get('email', None),
         password = data.get('password', None)
         phone_number = data.get('phone_number', None)
-        bytes = str(password).encode('utf-8')
-        salt = bcrypt.gensalt() 
-        hash = bcrypt.hashpw(bytes, salt)
-        new_user = Users(username = username, email = email, password = hash.decode('utf-8'), phone_number = phone_number, is_active = True)
+        hash_password = generate_password_hash(password)
+        new_user = Users(username = username, email = email, password = hash_password, phone_number = phone_number, is_active = True)
         db.session.add(new_user)
         db.session.commit()
         response_body['message'] = 'Usuario creado correctamente'
@@ -503,7 +510,7 @@ def login():
     user_password_bytes = user_row.password.encode('utf-8')
     if bcrypt.checkpw(password=password_bytes, hashed_password=user_password_bytes) == True:
         user_data = user_row.serialize()
-        access_token = create_access_token(identity=email, additional_claims={'user_id': user_data["id"], 'is_active': user_data['is_active']})
+        access_token = create_access_token(identity=str(user_data["id"]), additional_claims={'user_id': user_data["id"], 'is_active': user_data['is_active']})
         response_body['message'] = 'Usuario correcto'
         response_body['access_token'] = access_token
         response_body['results'] = user_data
@@ -755,3 +762,68 @@ def remove_bg():
     _, buffer = cv2.imencode(".png", img)
     response_body['results'] = base64.b64encode(buffer).decode("utf-8")
     return response_body, 200
+
+
+#CRUD Actualizar Datos Usuario
+@api.route('/update-user', methods=['PUT'])
+@jwt_required()
+def update_user():
+    response_body = {}
+    user_id = get_jwt_identity()
+    data = request.json
+    user = db.session.execute(db.select(Users).where(Users.id == user_id)).scalar()
+    if not user:
+        response_body["message"] = "Usuario no encontrado"
+        return response_body, 404
+    
+    user.username = data.get("username", user.username)
+    user.email = data.get("email", user.email)
+    user.phone_number = data.get("phone_number", user.phone_number)
+
+    db.session.commit()
+
+    response_body["message"] = "Datos actualizados correctamente",
+    response_body["results"] = user.serialize()
+    return response_body, 200
+
+
+# CRUD Eliminar Usuario
+@api.route('/delete-user', methods=['DELETE'])
+@jwt_required()
+def delete_user():
+    response_body = {}
+    user_id = get_jwt_identity()
+    
+    user = db.session.get(Users, user_id)
+    if not user:
+        response_body["message"] = "Usuario no encontrado"
+        return response_body, 404
+
+    db.session.delete(user)
+    db.session.commit()
+
+    response_body["message"] = "Cuenta eliminada correctamente"
+    return response_body, 200
+
+
+# CRUD Cambiar Contraseña
+@api.route('/reset-password', methods=['PUT'])
+@jwt_required()
+def reset_password():
+    response_body = {}
+    user_id = get_jwt_identity()
+    data = request.json
+    new_password = data.get("password")
+
+    user = db.session.get(Users, user_id) 
+    if not user:
+        response_body["message"] = "Usuario no encontrado"
+        return response_body, 404
+    
+    user.password = generate_password_hash(new_password)
+
+    db.session.commit()
+
+    response_body["message"] = "Contraseña actualizada correctamente"
+    return response_body, 200
+

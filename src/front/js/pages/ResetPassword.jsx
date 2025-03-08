@@ -2,6 +2,8 @@ import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { checkFormValidity } from "../utils";
 import { Context } from "../store/appContext";
+import { MyAlert as Alert } from "../component/Alert.jsx";
+import { useProtectedPage } from "../hooks/useProtectedPage.js";
 
 export const ResetPassword = (props) => {
     const { actions } = useContext(Context)
@@ -9,23 +11,50 @@ export const ResetPassword = (props) => {
     const [confirmPassword, setConfirmPassword] = useState("")
     const navigate = useNavigate();
 
+    const [alertData, setAlertData] = useState({ body: "", variant: "" })
+    const [showAlert, setShowAlert] = useState(false);
+    
+    const user = useProtectedPage();
+
     const handleResetPassword = async (event) => {
         event.preventDefault()
-        if (!checkFormValidity(event)) return
+        if (!checkFormValidity(event)) return;
 
-        const body = {
-            password: password,
-            confirmPassword: confirmPassword,
+        if (password !== confirmPassword) {
+            setAlertData({
+                body: "Las contraseñas no coinciden",
+                variant: "danger",
+            });
+            setShowAlert(true);
+            return;
         }
 
-        const response = await actions.ResetPassword(body)
-        if (response.status === 200) {
-            navigate("/")
-        }
+        const body = { password };
+
+        const response = await actions.resetPassword(body)
+        if (response.ok) {
+            setAlertData({
+                body: "Contraseña modificada correctamente",
+                variant: "success"
+            });
+        } else {
+            setAlertData({
+                body: "Ha habido un error, inténtalo más tarde",
+                variant: "danger",
+            });
+        };
+        setShowAlert(true);
+        setPassword("");
+        setConfirmPassword("");
+        navigate('/settings')
     }
 
     return (
-        <div className={`d-flex justify-content-center my-auto sign-form ${!props.ResetPassword && 'active'}`}>
+        <div className={`d-flex flex-column justify-content-center my-auto sign-form ${!props.ResetPassword && 'active'}`}>
+            <Alert
+                showAlert={showAlert}
+                alertData={alertData}
+            />
             <form action="submit" onSubmit={handleResetPassword} className={`col-12 col-md-6 col-lg-4 d-flex flex-column gap-2 mx-auto needs-validation`} noValidate>
                 <h1>Nueva contraseña</h1>
                 <div className="form-group d-flex flex-column align-items-center gap-2 mt-3">

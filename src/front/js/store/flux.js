@@ -2,13 +2,14 @@ const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: {
 			message: null,
+			user: null,
 		},
 		actions: {
 			getMessage: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/hello`
 				const response = await fetch(uri)
 				if (!response.ok) {
-					console.log("Error loading message from backend", error)
+					console.error("Error loading message from backend", error)
 					return
 				}
 				const data = await response.json()
@@ -32,20 +33,24 @@ const getState = ({ getStore, getActions, setStore }) => {
 				if (!response.ok) return { status: 400, data: data }
 				localStorage.setItem("user", JSON.stringify(data.results))
 				localStorage.setItem("accessToken", data.access_token)
-				return { status: 200, data: data }
+				setStore({ user: data.results})
+				return response;
 			},
 			signup: async (dataToSend) => {
 				const uri = `${process.env.BACKEND_URL}/api/users`
-				await fetch(uri, {
+				const response = await fetch(uri, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
 					},
 					body: JSON.stringify(dataToSend)
 				})
+				if (!response.ok) {
+					return response;
+				}
 				const body = {
-					email:dataToSend.email,
-					password:dataToSend.password,
+					email: dataToSend.email,
+					password: dataToSend.password,
 				}
 				const loginResponse = await getActions().login(body)
 				return loginResponse
@@ -130,9 +135,65 @@ const getState = ({ getStore, getActions, setStore }) => {
 					const data = await response.json()
 					return data.results
 				},
-			}
-		}
-	};
+			},
+			updateUser: async (dataToSend) => {
+				const uri = `${process.env.BACKEND_URL}/api/update-user`
+				const options = {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${localStorage.getItem("accessToken")}`
+					},
+					body: JSON.stringify(dataToSend)
+				};
+				const response = await fetch(uri, options);
+
+				if (!response.ok) {
+					console.error("Error :", response.status, response.statusText);
+					return response;
+				}
+				const data = await response.json();
+				localStorage.setItem("user", JSON.stringify(data.results))
+				return response;
+			},
+			deleteUser: async () => {
+				const uri = `${process.env.BACKEND_URL}/api/delete-user`
+				const options = {
+					method: 'DELETE',
+					headers: {
+						Authorization: `Bearer ${localStorage.getItem("accessToken")}`
+					},
+				};
+				const response = await fetch(uri, options);
+
+				if (!response.ok) {
+					console.error("Error: ", response.status, response.statusText);
+					return;
+				}
+				localStorage.removeItem("accessToken");
+				setStore({ user: null });
+			},
+			resetPassword: async (dataToSend) => {
+				const uri = `${process.env.BACKEND_URL}/api/reset-password`;
+				const options = {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${localStorage.getItem("accessToken")}`
+					},
+					body: JSON.stringify(dataToSend) 
+				};
+				const response = await fetch(uri, options);
+			
+				if (!response.ok) {
+					console.error("Error en ResetPassword:", response.status, response.statusText);
+					return response;
+				}
+				const data = await response.json();
+				return response;
+			},			
+		},
+	}
 };
 
 export default getState;
