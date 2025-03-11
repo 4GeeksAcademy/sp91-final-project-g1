@@ -23,16 +23,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					return null
 				}
 				const data = await response.json()
-				return data;
-			},
-			getUserLeague: async () => {
-				const uri = `${process.env.BACKEND_URL}/api/fantasy-league`
-				const response = await fetch(uri)
-				if (!response.ok) {
-					return
-				}
-				const data = await response.json()
-				return data;
+				return data.results;
 			},
 			joinLeague: async (userId, leagueId) => {
 				const uri = `${process.env.BACKEND_URL}/api/users/${userId}/join-league/${leagueId}`
@@ -63,48 +54,26 @@ const getState = ({ getStore, getActions, setStore }) => {
 				return user
 			},
 			addTeam: async (dataToSend) => {
-				const uri = `${process.env.BACKEND_URL}/api/fantasy-teams`; 
-				const body = {
-					user_id: dataToSend.user_id,  
-					name: dataToSend.name,       
-					logo: dataToSend.logo,       
-				};
+				const uri = `${process.env.BACKEND_URL}/api/fantasy-teams`;
 				const response = await fetch(uri, {
 					method: 'POST',
 					headers: {
-						'Content-Type': 'application/json', 
+						'Content-Type': 'application/json',
 					},
-					body: JSON.stringify(body), 
+					body: JSON.stringify(dataToSend),
 				});
-			
+
 				if (response.ok) {
-					const data = await response.json(); 
+					const data = await response.json();
 					if (data.results) {
+						const leagueResponse = await getActions().joinLeague(dataToSend.user_id, dataToSend.fantasy_league_id)
 						return true;
-					} else {	
+					} else {
 						return false;
 					}
 				} else {
-					console.error('Error al añadir equipo:', response.statusText);	
+					console.error('Error al añadir equipo:', response.statusText);
 					return false;
-				}
-			},
-			getUserTeam: async() =>{
-				const response = await fetch('/api/fantasy-team', {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-				});
-				if (response.ok) {
-					const data = await response.json();
-					if (data.team) {
-						setUserHasTeam(true); 
-					} else {
-						setUserHasTeam(false);
-					}
-				} else {
-					console.error('Error al obtener los datos del equipo del usuario');
 				}
 			},
 			getFromLocalStorage: (key) => {
@@ -124,7 +93,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				if (!response.ok) return { status: 400, data: data }
 				localStorage.setItem("user", JSON.stringify(data.results))
 				localStorage.setItem("accessToken", data.access_token)
-				setStore({ user: data.results})
+				setStore({ user: data.results })
 				return response;
 			},
 			signup: async (dataToSend) => {
@@ -148,6 +117,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 			},
 			logout: async () => {
 				localStorage.clear()
+				setStore({ user: null })
 			},
 			removeBgFromImage: async (imageUrl) => {
 				const url = `${process.env.BACKEND_URL}/api/remove-bg`
@@ -225,7 +195,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					const data = await response.json()
 					return data.results
 				},
-      },
+			},
 			updateUser: async (dataToSend) => {
 				const uri = `${process.env.BACKEND_URL}/api/update-user`
 				const options = {
@@ -271,17 +241,34 @@ const getState = ({ getStore, getActions, setStore }) => {
 						'Content-Type': 'application/json',
 						Authorization: `Bearer ${localStorage.getItem("accessToken")}`
 					},
-					body: JSON.stringify(dataToSend) 
+					body: JSON.stringify(dataToSend)
 				};
 				const response = await fetch(uri, options);
-			
+
 				if (!response.ok) {
 					console.error("Error en ResetPassword:", response.status, response.statusText);
 					return response;
 				}
 				const data = await response.json();
 				return response;
-			},			
+			},
+			getStandings: async () => {
+				const standings = await getActions().api.get('standings')
+				const teams = await getActions().api.get('teams')
+				const data = []
+				for (const standing of standings) {
+					standing['team'] = teams.find((team) => team.uid === standing.team_id)
+					standing['games_played'] = standing['games_won'] + standing['games_draw'] + standing['games_lost']
+					standing['goals_diff'] = standing['goals_for'] - standing['goals_against']
+
+					const sortOrder = ['team', 'games_played', 'games_won', 'games_draw', 'games_lost', 'goals_for', 'goals_against', 'goals_diff', 'points', 'form']
+					const dataStanding = JSON.parse(JSON.stringify(standing, sortOrder, 4))
+					dataStanding['team'] = teams.find((team) => team.uid === standing.team_id)
+
+					data.push(dataStanding)
+				}
+				return data
+			}
 		},
 	}
 };

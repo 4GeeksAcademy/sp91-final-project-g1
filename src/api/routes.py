@@ -9,7 +9,7 @@ from flask import Flask, request, jsonify, url_for, Blueprint
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-from api.models import db, Teams, Matches, Coaches, Players, FantasyCoaches, FantasyTeams, FantasyPlayers, Users, FantasyLeagues, FantasyStandings, FantasyLeagueTeams
+from api.models import db, Teams, Matches, Coaches, Players, FantasyCoaches, FantasyTeams, FantasyPlayers, Users, FantasyLeagues, FantasyStandings, FantasyLeagueTeams, Standings
 from datetime import datetime
 import numpy as np
 import urllib.request
@@ -274,12 +274,13 @@ def coach(id):
         response_body['message'] = "Coach not found"
         return response_body, 404
 
-"""
+
 @api.route('/players-market', methods=['GET'])
 def players_market():
     limit = request.args.get("limit")
+    page = request.args.get("page")
     response_body = {}
-    players_rows = db.session.execute(db.select(Players).limit(limit)).scalars()
+    players_rows = db.session.execute(db.select(Players).limit(limit).offset(int(page)*int(limit))).scalars()
 
     def serialize(row):
         serialized_row = row.serialize()
@@ -295,7 +296,7 @@ def players_market():
     response_body['message'] = "List of players"
     response_body['results'] = result
     return response_body, 200
-"""
+
 
 # CRUD de Players
 @api.route('/players', methods=['GET', 'POST'])
@@ -370,6 +371,7 @@ def fantasy_league(id):
         db.session.commit()
         response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
         return response_body, 200
+    return row.serialize()
     
 
 @api.route('/fantatsy-league-teams', methods=['GET', 'POST'])
@@ -627,34 +629,6 @@ def fantasy_teams():
         return response_body, 201
 
 
-@api.route('/users/<int:id>/fantasy-teams', methods=['GET'])
-def fantasy_team_by_user(id):
-    response_body = {}
-    fantasy_team = db.session.execute(db.select(FantasyTeams).where(FantasyTeams.user_id == id)).scalar()
-    if not fantasy_team:
-        response_body['message'] = "Fantasy team not found"
-        return response_body, 404
-    
-    if request.method == 'GET':
-        response_body['message'] = f'Respuesta desde {request.method}'
-        response_body['results'] = fantasy_team.serialize()
-        return response_body, 200
-    
-
-@api.route('/users/<int:id>/join-league/<int:league_id>', methods=['POST'])
-def join_league(id):
-    response_body = {}
-    fantasy_team = db.session.execute(db.select(FantasyTeams).where(FantasyTeams.user_id == id)).scalar()
-    if not fantasy_team:
-        response_body['message'] = "Fantasy team not found"
-        return response_body, 404
-    
-    if request.method == 'GET':
-        response_body['message'] = f'Respuesta desde {request.method}'
-        response_body['results'] = fantasy_team.serialize()
-        return response_body, 200
-    
-
 @api.route('/fantasy-teams/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 def fantasy_team(id):
     response_body = {}
@@ -855,3 +829,100 @@ def reset_password():
     response_body["message"] = "Contraseña actualizada correctamente"
     return response_body, 200
 
+
+@api.route('/users/<int:id>/fantasy-teams', methods=['GET'])
+def fantasy_team_by_user(id):
+    response_body = {}
+    row = db.session.execute(db.select(FantasyTeams).where(FantasyTeams.user_id == id)).scalar()
+    if not row:
+        response_body['message'] = "Fantasy team not found"
+        return response_body, 404
+
+    if request.method == 'GET':
+        response_body['message'] = f'Respuesta desde {request.method}'
+        response_body['results'] = row.serialize()
+        return response_body, 200
+    return row.serialize()
+
+
+@api.route('/users/<int:id>/join-league/<int:league_id>', methods=['POST'])
+def join_league(id, league_id):
+    response_body = {}
+    fantasy_team_row = fantasy_team_by_user(id)
+    fantasy_league_row = fantasy_league(league_id)
+    print(fantasy_team_row)
+    new_team_of_league = FantasyLeagueTeams(
+        fantasy_league_id=int(fantasy_league_row['id']),
+        fantasy_team_id=int(fantasy_team_row['id'])
+    )
+    db.session.add(new_team_of_league)
+    db.session.commit()
+
+    response_body['message'] = f'Respuesta desde {request.method}'
+    response_body['results'] = new_team_of_league.serialize()
+    return response_body, 201
+
+
+@api.route('/standings', methods=['GET', 'POST'])
+def standings():
+    response_body = {}
+    today = datetime.now()
+    league_day = datetime(today.year - 1, today.month, today.day)
+    rows_matches = db.session.execute(db.select(Matches).where(Matches.date <= league_day).order_by(Matches.date)).scalars()
+    matches_today = [match_today.serialize() for match_today in rows_matches]
+    if request.method == 'GET':
+        teams_data = [row.serialize() for row in db.session.execute(db.select(Standings)).scalars()]
+        for match in matches_today:
+            home_team = next(team_data for team_data in teams_data if team_data['team_id'] == match['home_team_id'])
+            away_team = next(team_data for team_data in teams_data if team_data['team_id'] == match['away_team_id'])
+            home_team['goals_for'] += match['home_goals']
+            home_team['goals_against'] += match['away_goals']
+            away_team['goals_for'] += match['away_goals']
+            away_team['goals_against'] += match['home_goals']
+            if match['home_goals'] > match['away_goals']:
+                home_team['points'] += 3
+                home_team['games_won'] += 1
+                home_team['form'] += "V"
+                away_team['games_lost'] += 1
+                away_team['form'] += "D"
+            elif match['home_goals'] == match['away_goals']:
+                home_team['points'] += 1
+                home_team['form'] += "E"
+                home_team['games_draw'] += 1
+                away_team['points'] += 1
+                away_team['form'] += "E"
+                away_team['games_draw'] += 1
+            else:
+                away_team['points'] += 3
+                away_team['form'] += "V"
+                away_team['games_won'] += 1
+                home_team['form'] += "D"
+                home_team['games_lost'] += 1
+            
+            if len(home_team['form']) > 5:
+                home_team['form'] = home_team['form'][:5]
+            if len(away_team['form']) > 5:
+                away_team['form'] = away_team['form'][:5]
+
+        response_body['message'] = f'Partidos hasta {league_day}'
+        response_body['results'] = sorted(teams_data, key=lambda d: d['points'], reverse=True)
+        return response_body, 200
+    if request.method == 'POST':
+        teams_data = [row.serialize() for row in db.session.execute(db.select(Teams)).scalars()]
+        for team_data in teams_data:
+            new_standing = Standings(
+                team_id = team_data['uid'],
+                points = 0,
+                games_won = 0,
+                games_draw = 0,
+                games_lost = 0,
+                goals_for = 0,
+                goals_against = 0,
+                form = ''
+            )
+            db.session.add(new_standing)
+        db.session.commit()
+        standings_data = [row.serialize() for row in db.session.execute(db.select(Standings)).scalars()]
+        response_body['message'] = 'Standings inicializados correctamente'
+        response_body['results'] = standings_data
+        return response_body, 201

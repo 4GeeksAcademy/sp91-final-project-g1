@@ -75,8 +75,8 @@ export const Settings = () => {
         navigate("/reset-password");
     }
 
-    const handleLogout = () => {
-        actions.logout()
+    const handleLogout = async () => {
+        await actions.logout()
         navigate('/')
     }
 

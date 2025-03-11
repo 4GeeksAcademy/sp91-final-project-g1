@@ -1,19 +1,36 @@
 import React, { useContext, useState } from "react";
 import { Table } from "../component/Table/Table.jsx";
 import { TableStandings } from "../component/Table/TableStandings.jsx";
-import { MyModal } from "../component/Modal.jsx";
 import { Context } from "../store/appContext.js";
 import { useProtectedPage } from "../hooks/useProtectedPage.js";
+import { Button, Modal } from "react-bootstrap";
 
 export const MyLeague = () => {
     const [showModal, setShowModal] = useState(false);
     const [modalData, setModalData] = useState({});
     const [leagueId, setLeagueId] = useState("");  
-    const [nameTeam, setNameTeam] = useState("");
+    const [teamName, setTeamName] = useState("");
     const [logo, setLogo] = useState("");
     const [data, setData] = useState([]);  
     const { actions } = useContext(Context)
     const user = useProtectedPage();
+
+    const handleClose = () => setShowModal(false);
+    const onAccept = async () => {
+        const newTeam = {
+            fantasy_league_id: leagueId,     
+            user_id: user?.id,    
+            name: teamName,
+            logo: logo,         
+        };
+        await actions.addTeam(newTeam)
+        /* setData([...data, newTeam]);
+        setLeagueId("");
+        setNameTeam("");
+        setLogo(""); */
+        setShowModal(false);
+    }
+
     const headers = [
         { label: "#", style: { width: '20px' } },
         { label: "Club", style: { width: '200px' } },
@@ -26,41 +43,6 @@ export const MyLeague = () => {
         // TODO: Añadir funcionalidad
     }
     const handleJoinLeague = () => {
-        setModalData({
-            title: "Unirse a liga",
-            body: (
-                <form action="submit" className={`col-12 col-md-6 col-lg-4 d-flex flex-column gap-2 align-center needs-validation`} noValidate>
-                    <div>
-                        <label htmlFor="id" className="form-label fw-bold">Id</label>
-                        <input className="form-control" type="number" placeholder="ID" value={leagueId} onChange={(e) => setLeagueId(e.target.value)} required />
-                    </div>
-                    <div>
-                        <label htmlFor="Name-Team" className="form-label fw-bold">Name Team</label>
-                        <input className="form-control" type="text" placeholder="Name-Team" value={nameTeam} onChange={(e) => setNameTeam(e.target.value)} required />
-                    </div>
-                    <div>
-                        <label htmlFor="logo" className="form-label fw-bold">Logo</label>
-                        <input className="form-control" type="text" placeholder="Logo" value={logo} onChange={(e) => setLogo(e.target.value)} />
-                    </div>
-                </form>
-            ),
-            onAccept: async () => {
-                // TODO: No funciona correctamente nos falta datos de usuario
-                const newTeam = {
-                    id: leagueId,         
-                    nameTeam: nameTeam,   
-                    logo: logo,         
-                };
-                await actions.addTeam(newTeam)
-                setData([...data, newTeam]);
-                setLeagueId("");
-                setNameTeam("");
-                setLogo("");
-                setShowModal(false);
-            },
-            acceptButtonLabel: "Unirse a la liga",
-            acceptButtonType: "success",
-        });
         setShowModal(true);
     };
 
@@ -84,7 +66,35 @@ export const MyLeague = () => {
                         </div>
                 }
             </div>
-            <MyModal show={showModal} setShow={setShowModal} modalData={modalData} />
+            <Modal show={showModal} onHide={handleClose}>
+            <Modal.Header closeButton>
+                <Modal.Title>Unirse a liga</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <form className={`col-12 col-md-6 col-lg-4 d-flex flex-column gap-2 align-center needs-validation`} noValidate>
+                    <div>
+                        <label htmlFor="id" className="form-label fw-bold">Id</label>
+                        <input name="id" className="form-control" type="number" placeholder="ID" value={leagueId} onChange={(e) => setLeagueId(e.target.value)} required />
+                    </div>
+                    <div>
+                        <label htmlFor="teamName" className="form-label fw-bold">Team name</label>
+                        <input name="teamName" className="form-control" type="text" placeholder="Team name" value={teamName} onChange={(e) => setTeamName(e.target.value)} required />
+                    </div>
+                    <div>
+                        <label htmlFor="logo" className="form-label fw-bold">Logo</label>
+                        <input name="logo" className="form-control" type="text" placeholder="Logo" value={logo} onChange={(e) => setLogo(e.target.value)} />
+                    </div>
+                </form>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose}>
+                    Cancelar
+                </Button>
+                <Button variant='success' onClick={onAccept}>
+                    Unirse a la liga
+                </Button>
+            </Modal.Footer>
+        </Modal>
         </div>
     );
 }

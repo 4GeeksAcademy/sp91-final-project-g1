@@ -9,7 +9,7 @@ export const Table = (props) => {
                 <tr>
                     {props.headers.map((header) => {
                         return (
-                            <th key={header} style={header.style} scope="col">{header.label}</th>
+                            <th key={`${props.baseKey}-${header.label}`} style={header.style} scope="col">{header.label}</th>
                         )
                     })}
                 </tr>

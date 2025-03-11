@@ -3,142 +3,31 @@ import { Table } from "../component/Table/Table.jsx";
 import { TableMarket } from "../component/Table/TableMarket.jsx";
 import { Context } from "../store/appContext.js";
 import { useProtectedPage } from "../hooks/useProtectedPage.js";
+import { Pagination } from "../component/Pagination.jsx";
 
 export const Market = () => {
     const { actions } = useContext(Context)
     const [data, setData] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const user = useProtectedPage();
+    const [page, setPage] = useState(1)
+    const [isMaxData, setIsMaxData] = useState(false)
 
     const getPlayers = async() => {
-        const playerData = await actions.api.get('players-market', 'limit=15')
+        setIsLoading(true)
+        const playerData = await actions.api.get('players-market', `page=${page - 1}&limit=15`)
         setData(playerData)
+        setIsMaxData(playerData.length < 15)
         setIsLoading(false)
     }
 
     useEffect(() => {
         getPlayers()
     }, [])
-    /*
-    const data = [
-        {
-            team: {
-                logo: 'https://media.api-sports.io/football/teams/529.png',
-                name: 'Barcelona'
-            },
-            photo: "https://media.api-sports.io/football/players/18742.png",
-            position: "Goalkeeper",
-            name: "T. Courtois",
-            fantasyTeam: null,
-            points: 0,
-            marketValue: 187000,
-            clauseValue: null
-        },
-        {
-            team: {
-                logo: 'https://media.api-sports.io/football/teams/529.png',
-                name: 'Barcelona'
-            },
-            photo: "https://media.api-sports.io/football/players/731.png",
-            position: "Defender",
-            name: "T. Courtos",
-            fantasyTeam: {
-                logo: 'https://media.api-sports.io/football/teams/33.png',
-                name: 'Equipo xd'
-            },
-            points: 15,
-            marketValue: 33000000,
-            clauseValue: 123456789
-        },
-        {
-            team: {
-                logo: 'https://media.api-sports.io/football/teams/529.png',
-                name: 'Barcelona'
-            },
-            photo: "https://media.api-sports.io/football/players/10009.png",
-            position: "Midfielder",
-            name: "T. Courtois",
-            fantasyTeam: null,
-            points: 0,
-            marketValue: 187000,
-            clauseValue: null
-        },
-        {
-            team: {
-                logo: 'https://media.api-sports.io/football/teams/529.png',
-                name: 'Barcelona'
-            },
-            photo: "https://media.api-sports.io/football/players/731.png",
-            position: "Forward",
-            name: "T. Courtos",
-            fantasyTeam: {
-                logo: 'https://media.api-sports.io/football/teams/33.png',
-                name: 'Equipo xd'
-            },
-            points: 15,
-            marketValue: 33000000,
-            clauseValue: 123456789
-        },
-        {
-            team: {
-                logo: 'https://media.api-sports.io/football/teams/529.png',
-                name: 'Barcelona'
-            },
-            photo: "https://media.api-sports.io/football/players/10009.png",
-            position: "Goalkeeper",
-            name: "T. Courtois",
-            fantasyTeam: null,
-            points: 0,
-            marketValue: 187000,
-            clauseValue: null
-        },
-        {
-            team: {
-                logo: 'https://media.api-sports.io/football/teams/529.png',
-                name: 'Barcelona'
-            },
-            photo: "https://media.api-sports.io/football/players/731.png",
-            position: "Defender",
-            name: "T. Courtos",
-            fantasyTeam: {
-                logo: 'https://media.api-sports.io/football/teams/33.png',
-                name: 'Equipo xd'
-            },
-            points: 15,
-            marketValue: 33000000,
-            clauseValue: 123456789
-        },
-        {
-            team: {
-                logo: 'https://media.api-sports.io/football/teams/529.png',
-                name: 'Barcelona'
-            },
-            photo: "https://media.api-sports.io/football/players/10009.png",
-            position: "Midfielder",
-            name: "T. Courtois",
-            fantasyTeam: null,
-            points: 0,
-            marketValue: 187000,
-            clauseValue: null
-        },
-        {
-            team: {
-                logo: 'https://media.api-sports.io/football/teams/529.png',
-                name: 'Barcelona'
-            },
-            photo: "https://media.api-sports.io/football/players/731.png",
-            position: "Forward",
-            name: "T. Courtos",
-            fantasyTeam: {
-                logo: 'https://media.api-sports.io/football/teams/33.png',
-                name: 'Equipo xd'
-            },
-            points: 15,
-            marketValue: 33000000,
-            clauseValue: 123456789
-        }
-    ]
-    */
+
+    useEffect(() => {
+        getPlayers()
+    }, [page])
 
     return (
         <div className="container-fluid">
@@ -148,6 +37,7 @@ export const Market = () => {
                 <Table headers={[]}>
                     <TableMarket data={data} />
                 </Table>}
+                <Pagination page={page} setPage={setPage} isMaxData={isMaxData} />
             </div>
         </div>
     )

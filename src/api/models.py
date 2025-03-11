@@ -183,8 +183,7 @@ class Standings(db.Model):
         return f'<Standings {self.rank} - {self.team_id}>'
  
     def serialize(self):
-        return {"rank":self.rank,
-                "team_id": self.team_id,
+        return {"team_id": self.team_id,
                 "points": self.points,
                 "games_won": self.games_won,
                 "games_draw": self.games_draw,

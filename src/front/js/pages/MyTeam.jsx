@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react"
+import React, { useContext, useState, useEffect } from "react"
 import { Context } from "../store/appContext";
 import { LineUp } from "../component/LineUp.jsx";
 import { Bench } from "../component/Bench.jsx";
@@ -7,37 +7,37 @@ import { Overlay } from "../component/Overlay.jsx";
 import { useProtectedPage } from "../hooks/useProtectedPage.js";
 
 export const MyTeam = () => {
-	const [hasLeague, setHasLeague] = useState(false);
+	const [team, setTeam] = useState(null);
 	const { actions } = useContext(Context);
 	const user = useProtectedPage();
-  const getUserTeam = async () => {
-    if (user) {
-		    try {
-			    const userHasTeam = await actions.getUserTeam(user.id) !== null;  
-			    setHasLeague(userHasTeam); 
-		    } catch (error) {
-			    console.error("Error al obtener el equipo del usuario:", error);
-		    }
-		  }
-	  };
+	const getUserTeam = async () => {
+		const userTeam = await actions.getUserTeam(user.id);
+		setTeam(userTeam);
+	};
 
-	  useEffect(() => {
-		  if (user) {
-		    getUserTeam(user.id);  
-		  }
-	  }, [user]); 
+	useEffect(() => {
+		if (user) {
+			getUserTeam(user.id);
+		}
+	}, [user]);
 
-return (
-	<div className="container-fluid row">
-		{!hasLeague && <Overlay />}
-		<div className="col-4 mt-auto">
-			<Bench />
+	return (
+		<div className="container-fluid row">
+			{
+				!team ?
+					<Overlay /> :
+					<>
+						<div className="col-4 mt-auto">
+							<Bench />
+						</div>
+						<div className="col-6">
+							<LineUp />
+						</div>
+						<div className="col-2">
+							<TeamData team={team} />
+						</div>
+					</>
+			}
 		</div>
-		<div className="col-6">
-			<LineUp />
-		</div>
-		<div className="col-2">
-			<TeamData />
-		</div>
-	</div>
-)};
+	)
+};

@@ -37,6 +37,10 @@ Player.propTypes = {
     isInBench: PropTypes.bool,
 }
 Player.defaultProps = {
-    player: {},
+    player: {
+        photo: '',
+        name: '',
+        points: 0
+    },
     isInBench: false,
 }
