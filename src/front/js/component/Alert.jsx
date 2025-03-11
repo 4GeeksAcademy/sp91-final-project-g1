@@ -7,7 +7,7 @@ export const MyAlert = (props) => {
     return (
         <>
             {
-                props.showAlert && <Alert key={props.alertData.variant} variant={props.alertData.variant}>
+                props.showAlert && <Alert key={props.alertData.variant} variant={props.alertData.variant} dismissible>
                     {props.alertData.body}
                 </Alert>
             }
@@ -16,7 +16,7 @@ export const MyAlert = (props) => {
 }
 
 MyAlert.propTypes = {
-    showAlert: PropTypes.boolean,
+    showAlert: PropTypes.bool,
     alertData: PropTypes.object,
 }
 

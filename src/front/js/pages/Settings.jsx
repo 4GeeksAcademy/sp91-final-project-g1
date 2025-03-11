@@ -4,41 +4,66 @@ import { Context } from "../store/appContext";
 import perfil from "../../img/perfil.png";
 import { MyModal as Modal } from "../component/Modal.jsx";
 import { MyAlert as Alert } from "../component/Alert.jsx";
-
+import { useProtectedPage } from "../hooks/useProtectedPage.js";
 
 export const Settings = () => {
 
-    const { actions } = useContext(Context)
-    const [userName, setUserName] = useState("")
-    const [email, setEmail] = useState("")
-    const [phoneNumber, setPhoneNumber] = useState("")
+    const { actions } = useContext(Context);
+    const [userName, setUserName] = useState("");
+    const [email, setEmail] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
 
     const [modalData, setModalData] = useState({ title: "", body: "", onAccept: () => { }, acceptButtonLabel: "", acceptButtonType: "primary" })
     const [showModal, setShowModal] = useState(false);
 
     const [alertData, setAlertData] = useState({ body: "", variant: "" })
     const [showAlert, setShowAlert] = useState(false);
-
+    
     const navigate = useNavigate()
-    const handleShow = () => setShow(true);
+    const handleShow = () => setShowModal(true);
+    const user = useProtectedPage();
 
+    
     const handleShowSaveChanges = () => {
         const data = {
             title: "Guardar datos",
             body: "¿Deseas guardar los datos cambiados?",
-            onAccept: () => { }, // TODO: llamar a funcion de flux
+            onAccept: async () => {
+                const userData = {
+                    username: userName,
+                    email: email,
+                    phone_number: phoneNumber,
+                };
+                const response = await actions.updateUser(userData);
+                if (response.ok) {
+                    setAlertData({
+                        body: "Datos modificados correctamente",
+                        variant: "success"
+                    });
+                } else {
+                    setAlertData({
+                        body: "El nombre de usuario o email ya están en uso",
+                        variant: "danger",
+                    });
+                }
+                setShowAlert(true);
+                setShowModal(false);
+            }, 
             acceptButtonLabel: "Guardar cambios",
             acceptButtonType: "success"
         }
-        setModalData(data)
-        handleShow()
+        setModalData(data);
+        handleShow();
     }
 
     const handleShowDeleteAccount = () => {
         const data = {
             title: "Eliminar cuenta",
             body: <p>¿Estás seguro de que deseas eliminar tu cuenta? <strong>Esta opción es irreversible y se eliminarán tus datos.</strong></p>,
-            onAccept: () => { }, //TODO: llamar a función de flux
+            onAccept: () => {
+                actions.deleteUser();
+                navigate('/')
+            },
             acceptButtonLabel: "Eliminar",
             acceptButtonType: "danger"
         }
@@ -48,6 +73,11 @@ export const Settings = () => {
 
     const handleResetPassword = () => {
         navigate("/reset-password");
+    }
+
+    const handleLogout = () => {
+        actions.logout()
+        navigate('/')
     }
 
     useEffect(() => {
@@ -68,7 +98,7 @@ export const Settings = () => {
                     <img src={perfil} alt="Foto perfil" style={{ width: "100px", height: "100px" }} />
                     <h1>Hola, {userName}</h1>
                 </div>
-                <button type="button" className="btn btn-outline-danger">Cerrar sesión</button>
+                <button type="button" className="btn btn-outline-danger" onClick={handleLogout}>Cerrar sesión</button>
             </div>
             <form action="submit" className={`col-12 col-md-6 col-lg-4 d-flex flex-column gap-2 mx-auto needs-validation`} noValidate>
                 <div className="form-group d-flex align-items-center gap-2 mt-3">

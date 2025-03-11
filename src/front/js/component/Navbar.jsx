@@ -1,9 +1,13 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import logo from "../../img/logo.png"
+import { Context } from "../store/appContext";
 
 
 export const Navbar = () => {
+	const { actions } = useContext(Context)
+	const user = actions.getFromLocalStorage("user")
+
 	return (
 		<nav className="navbar bg-body-tertiary">
 			<div className="container-fluid d-flex align-items-center">
@@ -17,27 +21,33 @@ export const Navbar = () => {
 								Resultados
 							</Link>
 						</li>
-						<li className="nav-item">
-							<Link className="nav-link" to="/my-team">
-								Mi equipo
-							</Link>
-						</li>
-						<li className="nav-item">
-							<Link className="nav-link" to="/my-league">
-								Mi liga
-							</Link>
-						</li>
-						<li className="nav-item">
-							<Link className="nav-link" to="/market">
-								Mercado
-							</Link>
-						</li>
+						{user && (
+							<>
+								<li className="nav-item">
+									<Link className="nav-link" to="/my-team">
+										Mi equipo
+									</Link>
+								</li>
+								<li className="nav-item">
+									<Link className="nav-link" to="/my-league">
+										Mi liga
+									</Link>
+								</li>
+								<li className="nav-item">
+									<Link className="nav-link" to="/market">
+										Mercado
+									</Link>
+								</li>
+							</>
+						)}
 					</ul>
 				</div>
 				<div className="ms-auto me-5">
-					<Link to="/settings" className="nav-link">
-						<i className="fa-solid fa-user fa-lg"></i>
-					</Link>
+					{user && (
+						<Link to="/settings" className="nav-link">
+							<i className="fa-solid fa-user fa-lg"></i>
+						</Link>
+					)}
 				</div>
 			</div>
 		</nav>

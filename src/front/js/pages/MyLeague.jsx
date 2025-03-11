@@ -3,6 +3,7 @@ import { Table } from "../component/Table/Table.jsx";
 import { TableStandings } from "../component/Table/TableStandings.jsx";
 import { MyModal } from "../component/Modal.jsx";
 import { Context } from "../store/appContext.js";
+import { useProtectedPage } from "../hooks/useProtectedPage.js";
 
 export const MyLeague = () => {
     const [showModal, setShowModal] = useState(false);
@@ -12,7 +13,7 @@ export const MyLeague = () => {
     const [logo, setLogo] = useState("");
     const [data, setData] = useState([]);  
     const { actions } = useContext(Context)
-    
+    const user = useProtectedPage();
     const headers = [
         { label: "#", style: { width: '20px' } },
         { label: "Club", style: { width: '200px' } },
@@ -22,7 +23,7 @@ export const MyLeague = () => {
         { label: "Puntos", style: { width: 'auto' } },
     ];
     const handleAddteam = () =>{
-        
+        // TODO: Añadir funcionalidad
     }
     const handleJoinLeague = () => {
         setModalData({

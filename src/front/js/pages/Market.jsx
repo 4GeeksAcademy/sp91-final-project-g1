@@ -2,16 +2,16 @@ import React, { useContext, useEffect, useState } from "react";
 import { Table } from "../component/Table/Table.jsx";
 import { TableMarket } from "../component/Table/TableMarket.jsx";
 import { Context } from "../store/appContext.js";
+import { useProtectedPage } from "../hooks/useProtectedPage.js";
 
 export const Market = () => {
-
     const { actions } = useContext(Context)
     const [data, setData] = useState([])
     const [isLoading, setIsLoading] = useState(true)
+    const user = useProtectedPage();
 
     const getPlayers = async() => {
         const playerData = await actions.api.get('players-market', 'limit=15')
-        console.log(playerData)
         setData(playerData)
         setIsLoading(false)
     }

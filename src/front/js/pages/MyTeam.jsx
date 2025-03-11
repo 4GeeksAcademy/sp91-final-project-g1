@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react"
+import React, { useContext, useState } from "react"
 import { Context } from "../store/appContext";
 import { LineUp } from "../component/LineUp.jsx";
 import { Bench } from "../component/Bench.jsx";
@@ -10,21 +10,21 @@ export const MyTeam = () => {
 	const [hasLeague, setHasLeague] = useState(false);
 	const { actions } = useContext(Context);
 	const user = useProtectedPage();
-    const getUserTeam = async () => {
-		if (user) {
-		  try {
-			const userHasTeam = await actions.getUserTeam(user.id) !== null;  
-			setHasLeague(userHasTeam); 
-		  } catch (error) {
-			console.error("Error al obtener el equipo del usuario:", error);
+  const getUserTeam = async () => {
+    if (user) {
+		    try {
+			    const userHasTeam = await actions.getUserTeam(user.id) !== null;  
+			    setHasLeague(userHasTeam); 
+		    } catch (error) {
+			    console.error("Error al obtener el equipo del usuario:", error);
+		    }
 		  }
-		}
 	  };
 
 	  useEffect(() => {
-		if (user) {
-		  getUserTeam(user.id);  
-		}
+		  if (user) {
+		    getUserTeam(user.id);  
+		  }
 	  }, [user]); 
 
 return (

@@ -11,6 +11,7 @@ class Users(db.Model):
     password = db.Column(db.String(255), unique=False, nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
     phone_number = db.Column(db.String(20), unique=True, nullable=True)
+    money = db.Column(db.Integer, unique=False, nullable=False, default=15000000)
 
     def __repr__(self):
         return f'<User {self.username} - {self.email}>'
@@ -21,7 +22,8 @@ class Users(db.Model):
                 "username": self.username,
                 "email": self.email,
                 "is_active": self.is_active,
-                "phone_number": self.phone_number}
+                "phone_number": self.phone_number,
+                "money": self.money}
 
 
 class FantasyTeams(db.Model):
@@ -128,9 +130,9 @@ class FantasyPlayers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.Integer, db.ForeignKey("players.uid")) 
     fantasy_team_id = db.Column(db.Integer, db.ForeignKey("fantasy_teams.id")) 
-    position = db.Column(db.Integer, unique=True, nullable=False)
+    position = db.Column(db.Integer, unique=False, nullable=False)
     points = db.Column(db.Integer, unique=False, nullable=False)
-    market_value = db.Column(db.Integer, unique=False, nullable=False)
+    market_value = db.Column(db.Integer, unique=False, nullable=False, default=1000000)
     clause_value = db.Column(db.Integer, unique=False, nullable=False)
     is_scoutable = db.Column(db.Boolean, unique=False, nullable=False)
     player_to = db.relationship('Players', foreign_keys=[player_id], backref=db.backref('fantasy_player_is', lazy='select'))
