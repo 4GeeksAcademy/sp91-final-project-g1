@@ -76,6 +76,7 @@
 		"@cyriacbr/react-split-text": "^1.0.0",
 		"@react-spring/web": "^9.7.5",
 		"bcryptjs": "^3.0.2",
+		"bootstrap": "^5.3.3",
 		"cors": "^2.8.5",
 		"prop-types": "^15.6.1",
 		"react": "^16.8.4",
