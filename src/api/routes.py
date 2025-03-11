@@ -620,6 +620,34 @@ def fantasy_teams():
         return response_body, 201
 
 
+@api.route('/users/<int:id>/fantasy-teams', methods=['GET'])
+def fantasy_team_by_user(id):
+    response_body = {}
+    fantasy_team = db.session.execute(db.select(FantasyTeams).where(FantasyTeams.user_id == id)).scalar()
+    if not fantasy_team:
+        response_body['message'] = "Fantasy team not found"
+        return response_body, 404
+    
+    if request.method == 'GET':
+        response_body['message'] = f'Respuesta desde {request.method}'
+        response_body['results'] = fantasy_team.serialize()
+        return response_body, 200
+    
+
+@api.route('/users/<int:id>/join-league/<int:league_id>', methods=['POST'])
+def join_league(id):
+    response_body = {}
+    fantasy_team = db.session.execute(db.select(FantasyTeams).where(FantasyTeams.user_id == id)).scalar()
+    if not fantasy_team:
+        response_body['message'] = "Fantasy team not found"
+        return response_body, 404
+    
+    if request.method == 'GET':
+        response_body['message'] = f'Respuesta desde {request.method}'
+        response_body['results'] = fantasy_team.serialize()
+        return response_body, 200
+    
+
 @api.route('/fantasy-teams/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 def fantasy_team(id):
     response_body = {}

@@ -25,7 +25,7 @@ export const MyModal = (props) => {
 }
 
 Modal.propTypes = {
-    show: PropTypes.boolean,
+    show: PropTypes.bool,
     setShow: PropTypes.func,
     modalData: PropTypes.object,
 }
