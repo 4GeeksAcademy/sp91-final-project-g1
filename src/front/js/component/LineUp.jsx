@@ -1,33 +1,36 @@
-import React, { useEffect } from "react"
-import { useNavigate } from "react-router-dom";
+import React from "react"
 import { Player } from "./Player.jsx";
 
-export const LineUp = () => {
-    const navigate = useNavigate()
-    const data = []
-    const goalkeepers = data.filter(player => player.position === "Goalkeeper");
-    const forwards = data.filter(player => player.position === "Forward");
-    const defenders = data.filter(player => player.position === "Defender");
-    const midfielders = data.filter(player => player.position === "Midfielder");
+export const LineUp = (props) => {
+    const [defendersCount, midFieldersCount, forwardsCount] = props.data.formation.split('-')
+    const goalkeeper = props.data.players.find(player => player.position === 1);
+
+    const generatePlayers = (count, offset = 0) => {
+        const players = []
+
+        for (let i = 1; i <= count; i++) {
+            console.log(i + 1 + offset);
+
+            const player = props.data.players.find(player => player.position === i + 1 + offset)
+            players.push(<Player {...player} key={player?.uid} />)
+        }
+
+        return players;
+    }
 
     return (
         <div className="text-center d-flex flex-column align-items-center">
             <div className="d-flex gap-2 ">
-                {forwards.map(player => (<Player {...player} />
-                ))}
+                {generatePlayers(parseInt(forwardsCount), parseInt(defendersCount) + parseInt(midFieldersCount))}
             </div>
             <div className="d-flex gap-2 ">
-                {midfielders.map(player => (<Player {...player} />
-                ))}
+                {generatePlayers(parseInt(midFieldersCount), parseInt(defendersCount))}
             </div>
             <div className="d-flex gap-2 ">
-                {defenders.map(player => (<Player {...player} />
-                ))}
+                {generatePlayers(parseInt(defendersCount))}
             </div>
             <div className="d-flex gap-2 ">
-                {goalkeepers.length > 0 && (
-                    <Player {...goalkeepers[0]} key={goalkeepers[0].uid} />
-                )}
+                <Player {...goalkeeper} key={goalkeeper?.uid} />
             </div>
         </div>)
 }

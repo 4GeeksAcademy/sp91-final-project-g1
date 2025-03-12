@@ -1,13 +1,14 @@
-import React, {useContext, useState} from "react"
+import React, { useContext, useState } from "react"
 import playerBg from "../../img/playerBg.png";
 import PropTypes from "prop-types";
 import { Context } from "../store/appContext";
+import playerPlaceholder from '../../img/player-placeholder.png'
 
 
 export const Player = (props) => {
     const size = props.isInBench ? 150 : 175
     const [processedImage, setProcessedImage] = useState(null);
-    const { actions } = useContext (Context)    
+    const { actions } = useContext(Context)
     const handleImageLoad = async () => {
         if (props.photo) {
             const processed = await actions.removeBgFromImage(props.photo);
@@ -20,12 +21,12 @@ export const Player = (props) => {
     if (props.photo) {
         handleImageLoad();
     }
-    
-    return ( 
+
+    return (
         <div className={`card text-white border-0`} style={{ width: `${size}px`, height: `${size}px` }}>
             <img className="card-img" src={playerBg} alt="Card image" />
             <div className={`card-img-overlay d-flex flex-column justify-content-center align-items-center ${props.isInBench && "p-0"}`}>
-                <img src={processedImage || props.photo} className="card-text " height={size * 0.4} width={size * 0.4} />
+                <img src={processedImage || playerPlaceholder} className="card-text " height={size * 0.4} width={size * 0.4} />
                 <p className="card-title m-0">{props.name}</p>
                 <p className={`card-text ${!props.isInBench && "fs-5"} m-0`}>{props.points}</p>
             </div>

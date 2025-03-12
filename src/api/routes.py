@@ -240,7 +240,7 @@ def matches():
     
 
 # CRUD de Coaches
-@api.route('/coachs', methods=['GET', 'POST'])
+@api.route('/coaches', methods=['GET', 'POST'])
 def coaches():
     response_body = {}
     if request.method == 'GET':
@@ -266,7 +266,7 @@ def coaches():
         return response_body, 201
 
 
-@api.route('/coachs/<int:id>', methods=['GET'])
+@api.route('/coaches/<int:id>', methods=['GET'])
 def coach(id):
     response_body = {}
     coach = db.session.get(Coaches, id)
@@ -470,6 +470,7 @@ def generate_password_hash(password):
     hash = bcrypt.hashpw(bytes, salt)
     return hash.decode("utf-8")
 
+
 @api.route('/users', methods=['GET', 'POST'])
 def users():
     response_body = {}
@@ -660,6 +661,20 @@ def fantasy_team(id):
         response_body['message'] = f'Respuesta desde {request.method}'
         return response_body, 200
  
+
+@api.route('/fantasy-teams/<int:id>/fantasy-players', methods=['GET'])
+def fantasy_players_by_team(id):
+    response_body = {}
+    fantasy_team = db.session.get(FantasyTeams, id)
+    if not fantasy_team:
+        response_body['message'] = "Fantasy team not found"
+        return response_body, 404
+    
+    rows = db.session.execute(db.select(FantasyPlayers).where(FantasyPlayers.fantasy_team_id == id)).scalars()
+    response_body['message'] = f'Respuesta desde {request.method}'
+    response_body['results'] = [row.serialize() for row in rows]
+    return response_body, 200
+
 
 # CRUD de Fantasy Player
 @api.route('/fantasy-players', methods=['GET', 'POST'])

@@ -23,7 +23,13 @@ const getState = ({ getStore, getActions, setStore }) => {
 					return null
 				}
 				const data = await response.json()
-				return data.results;
+				const teamData = data.results
+				const userPlayersUri = `${process.env.BACKEND_URL}/api/fantasy-teams/${teamData.id}/fantasy-players`
+				const userPlayersResponse = await fetch(userPlayersUri)
+				const userPlayersData = await userPlayersResponse.json()
+				teamData.players = userPlayersData.results
+
+				return teamData;
 			},
 			joinLeague: async (userId, leagueId) => {
 				const uri = `${process.env.BACKEND_URL}/api/users/${userId}/join-league/${leagueId}`

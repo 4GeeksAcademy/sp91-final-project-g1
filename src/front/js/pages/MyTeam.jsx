@@ -28,10 +28,10 @@ export const MyTeam = () => {
 					<Overlay /> :
 					<>
 						<div className="col-4 mt-auto">
-							<Bench />
+							<Bench data={team} />
 						</div>
 						<div className="col-6">
-							<LineUp />
+							<LineUp data={team} />
 						</div>
 						<div className="col-2">
 							<TeamData team={team} />
