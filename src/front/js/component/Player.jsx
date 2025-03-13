@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import playerBg from "../../img/playerBg.png";
 import PropTypes from "prop-types";
 import { Context } from "../store/appContext";
@@ -6,29 +6,35 @@ import playerPlaceholder from '../../img/player-placeholder.png'
 
 
 export const Player = (props) => {
+    const player = props.player
     const size = props.isInBench ? 150 : 175
     const [processedImage, setProcessedImage] = useState(null);
     const { actions } = useContext(Context)
     const handleImageLoad = async () => {
-        if (props.photo) {
-            const processed = await actions.removeBgFromImage(props.photo);
-            if (processed !== "ERROR") {
-                setProcessedImage(processed);
-            }
+        console.log(player);
+
+        const processed = await actions.removeBgFromImage(player.photo);
+        if (processed !== "ERROR") {
+            setProcessedImage(processed);
         }
     };
 
-    if (props.photo) {
-        handleImageLoad();
-    }
+    useEffect(() => {
+        if (player.photo !== '') {
+            handleImageLoad();
+        }
+        else {
+            setProcessedImage(playerPlaceholder)
+        }
+    }, [player])
 
     return (
         <div className={`card text-white border-0`} style={{ width: `${size}px`, height: `${size}px` }}>
             <img className="card-img" src={playerBg} alt="Card image" />
-            <div className={`card-img-overlay d-flex flex-column justify-content-center align-items-center ${props.isInBench && "p-0"}`}>
-                <img src={processedImage || playerPlaceholder} className="card-text " height={size * 0.4} width={size * 0.4} />
-                <p className="card-title m-0">{props.name}</p>
-                <p className={`card-text ${!props.isInBench && "fs-5"} m-0`}>{props.points}</p>
+            <div className={`card-img-overlay d-flex flex-column justify-content-center align-items-center ${player.isInBench && "p-0"}`}>
+                <img src={processedImage} className="card-text " height={size * 0.4} width={size * 0.4} />
+                <p className="card-title m-0">{player.name}</p>
+                <p className={`card-text ${!player.isInBench && "fs-5"} m-0`}>{player.points}</p>
             </div>
         </div>
     )

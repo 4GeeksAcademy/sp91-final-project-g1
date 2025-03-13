@@ -671,8 +671,15 @@ def fantasy_players_by_team(id):
         return response_body, 404
     
     rows = db.session.execute(db.select(FantasyPlayers).where(FantasyPlayers.fantasy_team_id == id)).scalars()
+    data = []
+    for row in rows:
+        item = row.serialize()
+        player = db.session.execute(db.select(Players).where(Players.uid == item['player_id'])).scalar().serialize()
+        item['name'] = player['name']
+        item['photo'] = player['photo']
+        data.append(item)
     response_body['message'] = f'Respuesta desde {request.method}'
-    response_body['results'] = [row.serialize() for row in rows]
+    response_body['results'] = data
     return response_body, 200
 
 
@@ -692,11 +699,9 @@ def fantasy_players():
         new_player = FantasyPlayers(
             player_id = data.get('player_id'),
             fantasy_team_id = data.get('fantasy_team_id'),
-            position = 0,
+            position = data.get('position'),
             points = 0,
-            market_value = 0,
-            clause_value = 0,
-            is_scoutable = True)
+            clause_value = data.get('clause_value'))
         db.session.add(new_player)
         db.session.commit()
         response_body['message'] = f'Respuesta desde {request.method}'
@@ -707,7 +712,7 @@ def fantasy_players():
 @api.route('/fantasy-players/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 def fantasy_player(id):
     response_body = {}
-    fantasy_player = db.session.get(FantasyPlayers, id)
+    fantasy_player = db.session.execute(db.select(FantasyPlayers).where(FantasyPlayers.player_id == id)).scalar()
     if not fantasy_player:
         response_body['message'] = "Fantasy player not found"
         return response_body, 404
@@ -736,6 +741,19 @@ def fantasy_player(id):
         db.session.commit()
         response_body['message'] = f'Respuesta desde {request.method}'
         return response_body, 200
+
+
+@api.route('/fantasy-players/<int:id>/fantasy-teams', methods=['GET'])
+def fantasy_team_by_player(id):
+    response_body = {}
+    fantasy_player_data = fantasy_player(id)
+    if(fantasy_player_data[1] != 200):
+        return response_body, 404
+    fantasy_player_data = fantasy_player_data[0]['results']
+    fantasy_team_data = db.session.execute(db.select(FantasyTeams).where(FantasyTeams.id == fantasy_player_data['fantasy_team_id'])).scalar()
+    fantasy_player_data['fantasy_team'] = fantasy_team_data.serialize()
+    response_body['results'] = fantasy_player_data
+    return response_body, 200
 
 
 @api.route('/remove-bg', methods=['POST'])
@@ -918,7 +936,6 @@ def standings():
                 home_team['form'] = home_team['form'][:5]
             if len(away_team['form']) > 5:
                 away_team['form'] = away_team['form'][:5]
-
         response_body['message'] = f'Partidos hasta {league_day}'
         response_body['results'] = sorted(teams_data, key=lambda d: d['points'], reverse=True)
         return response_body, 200

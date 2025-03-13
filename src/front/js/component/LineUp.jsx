@@ -3,16 +3,24 @@ import { Player } from "./Player.jsx";
 
 export const LineUp = (props) => {
     const [defendersCount, midFieldersCount, forwardsCount] = props.data.formation.split('-')
-    const goalkeeper = props.data.players.find(player => player.position === 1);
+    const goalkeeper = props.data.players.find(player => player.position === 'Goalkeeper');
 
-    const generatePlayers = (count, offset = 0) => {
+    const generatePlayers = (count, position) => {
         const players = []
 
-        for (let i = 1; i <= count; i++) {
-            console.log(i + 1 + offset);
-
-            const player = props.data.players.find(player => player.position === i + 1 + offset)
-            players.push(<Player {...player} key={player?.uid} />)
+        const playersOfPosition = props.data.players.filter(player => player.position === position)
+        if (playersOfPosition) {
+            for (const player of playersOfPosition) {
+                const playerAlreadyAdded = players.find((playerAlready) => playerAlready.uid === player.uid)
+                if (!playerAlreadyAdded) {
+                    players.push(<Player player={player} key={player?.uid} />)
+                }
+            }
+        }
+        if(players.length < count) {
+            for (let i = players.length; i < count; i++) {
+                players.push(<Player />)
+            }
         }
 
         return players;
@@ -21,16 +29,16 @@ export const LineUp = (props) => {
     return (
         <div className="text-center d-flex flex-column align-items-center">
             <div className="d-flex gap-2 ">
-                {generatePlayers(parseInt(forwardsCount), parseInt(defendersCount) + parseInt(midFieldersCount))}
+                {generatePlayers(parseInt(forwardsCount), 'Attacker')}
             </div>
             <div className="d-flex gap-2 ">
-                {generatePlayers(parseInt(midFieldersCount), parseInt(defendersCount))}
+                {generatePlayers(parseInt(midFieldersCount), 'Midfielder')}
             </div>
             <div className="d-flex gap-2 ">
-                {generatePlayers(parseInt(defendersCount))}
+                {generatePlayers(parseInt(defendersCount), 'Defender')}
             </div>
             <div className="d-flex gap-2 ">
-                <Player {...goalkeeper} key={goalkeeper?.uid} />
+                <Player player={goalkeeper} key={goalkeeper?.uid} />
             </div>
         </div>)
 }

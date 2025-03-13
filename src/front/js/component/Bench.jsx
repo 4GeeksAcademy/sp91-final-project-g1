@@ -10,7 +10,7 @@ export const Bench = (props) => {
 
         for (let i = 1; i <= 5; i++) {
             const player = props.data.players.find(player => player.position === i + 11)
-            players.push(<Player {...player} key={player?.uid} />)
+            players.push(<Player player={player} key={player?.uid} />)
         }
 
         return players;
@@ -18,7 +18,7 @@ export const Bench = (props) => {
 
     return (
         <div className="d-flex flex-column">
-            <Player {...coach} />
+            <Player player={coach} />
             <div className="d-flex flex-wrap">
                 {generateBench()}
             </div>

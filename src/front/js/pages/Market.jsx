@@ -15,9 +15,22 @@ export const Market = () => {
 
     const getPlayers = async() => {
         setIsLoading(true)
-        const playerData = await actions.api.get('players-market', `page=${page - 1}&limit=15`)
-        setData(playerData)
-        setIsMaxData(playerData.length < 15)
+        const playersData = await actions.api.get('players-market', `page=${page - 1}&limit=15`)
+
+        const data = []
+        for(const playerData of playersData) {
+            const playerFantasyTeam = await actions.api.get(`fantasy-players/${playerData.uid}/fantasy-teams`)
+            playerData.fantasyTeam = playerFantasyTeam?.fantasy_team
+            const currentFantasyTeam = actions.getFromLocalStorage('fantasyTeam')
+            
+            if(playerData.fantasyTeam?.id === currentFantasyTeam?.id) {
+                continue
+            }
+            data.push(playerData)
+        }
+
+        setData(data)
+        setIsMaxData(playersData.length < 15)
         setIsLoading(false)
     }
 

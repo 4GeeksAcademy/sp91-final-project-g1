@@ -3,6 +3,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 		store: {
 			message: null,
 			user: null,
+			fantasyTeam: null
 		},
 		actions: {
 			getMessage: async () => {
@@ -29,6 +30,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 				const userPlayersData = await userPlayersResponse.json()
 				teamData.players = userPlayersData.results
 
+				localStorage.setItem('fantasyTeam', JSON.stringify(teamData))
+				setStore({ fantasyTeam: teamData })
 				return teamData;
 			},
 			joinLeague: async (userId, leagueId) => {
@@ -152,7 +155,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 					if (!response.ok) {
 						console.error(`Error ${response.status} al llamar a GET /${endpoint}`)
-						return
+						return undefined
 					}
 					const data = await response.json()
 					return data.results
@@ -162,6 +165,9 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 					const response = await fetch(url, {
 						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
 						body: JSON.stringify(body)
 					})
 
