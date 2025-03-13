@@ -15,6 +15,7 @@ import numpy as np
 import urllib.request
 import base64
 import cv2
+from api.functions import *
 
 
 api = Blueprint('api', __name__)
@@ -189,300 +190,40 @@ def populate_db_coaches():
     return {}, 200
 
 
-# CRUD de Teams
-@api.route('/teams', methods=['GET', 'POST'])
-def teams():
-    response_body = {}
-    if request.method == 'GET':
-        rows = db.session.execute(db.select(Teams)).scalars()
-        result = [row.serialize() for row in rows]
-        response_body['message'] = "List of teams"
-        response_body['results'] = result
-        return response_body, 200
-    
-    if request.method == 'POST':
-        data = request.json
-        new_team = Teams(
-            name = data.get('name'),
-            logo = data.get('logo'))
-        db.session.add(new_team)
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde {request.method}'
-        response_body['results'] = new_team.serialize()
-        return response_body, 201
+"""
+    CRUD /users
 
+    GET /: Obtiene todos los usuarios
+    POST /: Crea un usuario
+        Ejemplo de body: {"username": "Test",
+                          "email": "test@email.com",
+                          "password": "1234", # Se encripta desde el backend
+                          "phone_number": "123456789"}
+    GET /<id>: Obtiene los datos de un usuario mediante su ID
+    PUT /<id>: Actualiza los datos de un usuario
+        Ejemplo de body: {"username": "Other",
+                          "email": "other@email.com",
+                          "phone_number": "987654321"}
+    DELETE /<id>: Elimina un usuario (soft delete)
+    PUT /reset-password: Restablece la contraseña a una ofrecida por el usuario
+        Ejemplo de body: {"password": "5678"}
 
-# CRUD de Matches
-@api.route('/fixtures', methods=['GET', 'POST'])
-def matches():
-    response_body = {}
-    if request.method == 'GET':
-        rows = db.session.execute(db.select(Matches)).scalars()
-        result = [row.serialize() for row in rows]
-        response_body['message'] = "List of matches"
-        response_body['results'] = result
-        return response_body, 200
-    
-    if request.method == 'POST':
-        data = request.json
-        new_match = Matches(
-            date = data.get('date'),
-            home_team_id = data.get('home_team_id'),
-            away_team_id = data.get('away_team_id'),
-            home_goals = data.get('home_goals'),
-            away_goals = data.get('away_goals'),
-            is_home_winner = data.get('is_home_winner'))
-        db.session.add(new_match)
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde {request.method}'
-        response_body['results'] = new_match.serialize()
-        return response_body, 201
-    
-
-# CRUD de Coaches
-@api.route('/coaches', methods=['GET', 'POST'])
-def coaches():
-    response_body = {}
-    if request.method == 'GET':
-        rows = db.session.execute(db.select(Coaches)).scalars()
-        result = [row.serialize() for row in rows]
-        response_body['message'] = "List of coaches"
-        response_body['results'] = result
-        return response_body, 200
-    
-    if request.method == 'POST':
-        data = request.json
-        new_coach = Coaches(
-            name = data.get('name'),
-            first_name = data.get('first_name'),
-            last_name = data.get('last_name'),
-            nationality = data.get('nationality'),
-            photo = data.get('photo'),
-            team_id = data.get('team_id'))
-        db.session.add(new_coach)
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde {request.method}'
-        response_body['results'] = new_coach.serialize()
-        return response_body, 201
-
-
-@api.route('/coaches/<int:id>', methods=['GET'])
-def coach(id):
-    response_body = {}
-    coach = db.session.get(Coaches, id)
-    if not coach:
-        response_body['message'] = "Coach not found"
-        return response_body, 404
-
-
-@api.route('/players-market', methods=['GET'])
-def players_market():
-    limit = request.args.get("limit")
-    page = request.args.get("page")
-    response_body = {}
-    players_rows = db.session.execute(db.select(Players).limit(limit).offset(int(page)*int(limit))).scalars()
-
-    def serialize(row):
-        serialized_row = row.serialize()
-        team_row = db.session.execute(db.select(Teams).where(Teams.uid == row.team_id)).scalar()
-        if team_row == None:
-            return serialized_row
-        team = team_row.serialize()
-        serialized_row["team"] = team
-        return serialized_row
-    
-    result = [serialize(row) for row in players_rows]
-    
-    response_body['message'] = "List of players"
-    response_body['results'] = result
-    return response_body, 200
-
-
-# CRUD de Players
-@api.route('/players', methods=['GET', 'POST'])
-def players():
-    response_body = {}
-    if request.method == 'GET':
-        rows = db.session.execute(db.select(Players)).scalars()
-        result = [row.serialize() for row in rows]
-        response_body['message'] = "List of players"
-        response_body['results'] = result
-        return response_body, 200
-
-    if request.method == 'POST':
-        data = request.json
-        new_player = Players(
-            name = data.get('name'),
-            first_name = data.get('first_name'),
-            last_name = data.get('last_name'),
-            number = data.get('number'),
-            nationality = data.get('nationality'),
-            position = data.get('position'),
-            photo = data.get('photo'),
-            team_id = data.get('team_id'))
-        db.session.add(new_player)
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde {request.method}'
-        response_body['results'] = new_player.serialize()
-        return response_body, 201
-
-
-@api.route('/fantasy-leagues', methods=['GET', 'POST'])
-def fantasy_leagues():
-    response_body = {}
-    if request.method == 'GET':
-        rows = db.session.execute(db.select(FantasyLeagues)).scalars()
-        result = [ row.serialize() for row in rows]
-        response_body['message'] = f'List of fantasy league'
-        response_body['results'] = result
-        return response_body, 200
-    if request.method == 'POST':
-        data = request.json
-        new_league = FantasyLeagues(name=data.get('name'),
-                                    photo=data.get('photo'))     
-        db.session.add(new_league)
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde el {request.method}'
-        response_body['results'] = new_league.serialize()
-        return response_body, 201
-
-
-@api.route('/fantasy-leagues/<int:id>', methods=['GET', 'PUT', 'DELETE'])
-def fantasy_league(id):
-    response_body = {}
-    row = db.session.get(FantasyLeagues, id)
-    if not row:
-        response_body['message'] = f'El jugador de fantasy con el id: {id} no existe en nuestro registros'
-        return response_body, 404
-    if request.method == 'GET':
-        response_body['results'] = row.serialize()
-        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
-        return response_body, 200
-    if request.method == 'PUT':
-        data = request.json
-        row.name = data['name']
-        row.photo = data['photo']
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
-        response_body['results'] = row.serialize()
-        return response_body, 200
-    if request.method == 'DELETE':
-        db.session.delete(row)
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
-        return response_body, 200
-    return row.serialize()
-    
-
-@api.route('/fantatsy-league-teams', methods=['GET', 'POST'])
-def fantasy_league_teams():
-    response_body = {}
-    if request.method == 'GET':
-        rows = db.session.execute(db.select(FantasyLeagueTeams)).scalars()
-        result = [ row.serialize() for row in rows]
-        response_body['message'] = f'List of fantasy league teams'
-        response_body['results'] = result
-        return response_body, 200
-    if request.method == 'POST':
-        data = request.json
-        new_league_team = FantasyLeagueTeams(fantasy_team_id=data.get('fantasy_team_id'),
-                                             fantasy_league_id=data.get('fantasy_league_id'))     
-        db.session.add(new_league_team)
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde el {request.method}'
-        response_body['results'] = new_league_team.serialize()
-        return response_body, 201
-
-
-@api.route('/fantasy-league-teams/<int:id>', methods=['GET', 'PUT', 'DELETE'])
-def fantasy_league_team(id):
-    response_body = {}
-    rows = db.session.get(FantasyLeagueTeams, id)
-    if not rows:
-        response_body['message'] = f'La liga de fantasy con el id: {id} no existe en nuestro registros'
-        return response_body, 404
-    if request.method == 'GET':
-        response_body['results'] = rows.serialize()
-        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
-        return response_body, 200
-    if request.method == 'PUT':
-        data = request.json
-        rows.fantasy_team_id = data['fantasy_team_id']
-        rows.fantasy_league_id = data['fantasy_league_id']
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
-        response_body['results'] = rows.serialize()
-        return response_body, 200
-    if request.method == 'DELETE':
-        db.session.delete(rows)
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
-        return response_body, 200
-
-
-@api.route('/fantatsy-standings', methods=['GET', 'POST'])
-def fantasy_standings():
-    response_body = {}
-    if request.method == 'GET':
-        rows = db.session.execute(db.select(FantasyStandings)).scalars()
-        result = [ row.serialize() for row in rows]
-        response_body['message'] = f'List of fantasy standings'
-        response_body['results'] = result
-        return response_body, 200
-    if request.method == 'POST':
-        data = request.json
-        new_standing = FantasyStandings(fantasy_team_id=data.get('fantasy_team_id'))     
-        db.session.add(new_standing)
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde el {request.method}'
-        response_body['results'] = new_standing.serialize()
-        return response_body, 201
-
-
-@api.route('/fantasy-standings/<int:id>', methods=['GET', 'PUT', 'DELETE'])
-def fantasy_standing(id):
-    response_body = {}
-    rows = db.session.get(FantasyStandings, id)
-    if not rows:
-        response_body['message'] = f'El fantasy standings con el id: {id} no existe en nuestro registros'
-        return response_body, 404
-    if request.method == 'GET':
-        response_body['results'] = rows.serialize()
-        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
-        return response_body, 200
-    if request.method == 'PUT':
-        data = request.json
-        rows.fantasy_team_id = data['fantasy_team_id']
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
-        response_body['results'] = rows.serialize()
-        return response_body, 200
-    if request.method == 'DELETE':
-        db.session.delete(rows)
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
-        return response_body, 200
-
-
-def generate_password_hash(password):
-    bytes = str(password).encode('utf-8')
-    salt = bcrypt.gensalt() 
-    hash = bcrypt.hashpw(bytes, salt)
-    return hash.decode("utf-8")
-
-
+    GET /<id>/fantasy-teams: Devuelve el equipo de un usuario
+    POST /<id>/join-league/<league_id>': Añade al usuario a una liga y le crea un equipo
+        Ejemplo de body: {"id": 1,
+                          "league_id": 1}
+"""
 @api.route('/users', methods=['GET', 'POST'])
 def users():
     response_body = {}
     if request.method == 'GET':
-        rows = db.session.execute(db.select(Users)).scalars()
-        result = [ row.serialize() for row in rows]
+        result = get_users()
         response_body['message'] = 'List de users'
         response_body['results'] = result
         return response_body, 200
     if request.method == 'POST':
         data = request.json
-        user_existing = db.session.execute(db.select(Users).where(Users.email == data.get("email"))).scalar()
+        user_existing = get_user_by_email(email=data.get('email'))
         if user_existing is not None: 
             response_body["message"] = "Usuario ya existente"
             return response_body, 403
@@ -490,13 +231,95 @@ def users():
         email = data.get('email', None),
         password = data.get('password', None)
         phone_number = data.get('phone_number', None)
-        hash_password = generate_password_hash(password)
-        new_user = Users(username = username, email = email, password = hash_password, phone_number = phone_number, is_active = True)
-        db.session.add(new_user)
-        db.session.commit()
+        new_user = add_user(username = username, 
+                            email = email, 
+                            password = password, 
+                            phone_number = phone_number)
         response_body['message'] = 'Usuario creado correctamente'
         response_body['results'] = new_user.serialize()
         return response_body, 201
+
+
+@api.route('/users/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+@jwt_required()
+def user(id):
+    response_body = {}
+    row = get_user_by_id(id=id)
+    if not row:
+        response_body['message'] = f'El usuario con el id: {id} no existe en nuestro registros'
+        return response_body, 400
+    if request.method == 'GET':
+        response_body['results'] = row.serialize()
+        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
+        return response_body, 200
+    if request.method == 'PUT':
+        user_id = get_jwt_identity()
+        data = request.json
+        user = get_user_by_id(id=user_id)
+        user = update_user(user=user, 
+                           username=data.get('username'), 
+                           email=data.get('email'), 
+                           phone_number=data.get('phone_number'))
+        response_body["message"] = "Datos actualizados correctamente",
+        response_body["results"] = user.serialize()
+        return response_body, 200
+    if request.method == 'DELETE':
+        user_id = get_jwt_identity()
+        user = get_user_by_id(id=user_id)
+
+        if not user:
+            response_body["message"] = "Usuario no encontrado"
+            return response_body, 404
+
+        delete_user(user=user)
+
+        response_body["message"] = "Cuenta deshabilitada correctamente"
+        return response_body, 200
+
+
+@api.route('users/reset-password', methods=['PUT'])
+@jwt_required()
+def reset_password():
+    response_body = {}
+    user_id = get_jwt_identity()
+    data = request.json
+    new_password = data.get("password")
+
+    user = get_user_by_id(id=user_id)
+    if not user:
+        response_body["message"] = "Usuario no encontrado"
+        return response_body, 404
+    
+    user.password = generate_password_hash(new_password)
+    db.session.commit()
+
+    response_body["message"] = "Contraseña actualizada correctamente"
+    return response_body, 200
+
+
+@api.route('/users/<int:id>/fantasy-teams', methods=['GET'])
+def fantasy_team_by_user(id):
+    response_body = {}
+    row = get_fantasy_team_by_user_id(id)
+    if row is None:
+        response_body['message'] = "Fantasy team not found"
+        return response_body, 404
+
+    if request.method == 'GET':
+        response_body['message'] = f'Respuesta desde {request.method}'
+        response_body['results'] = row.serialize()
+        return response_body, 200
+    return row.serialize()
+
+
+@api.route('/users/<int:id>/join-league/<int:league_id>', methods=['POST'])
+def join_league(id, league_id):
+    response_body = {}
+    new_team_of_league = add_user_to_league(id, league_id)
+
+    response_body['message'] = f'Respuesta desde {request.method}'
+    response_body['results'] = new_team_of_league.serialize()
+    return response_body, 201
 
 
 @api.route('/login', methods=['POST'])
@@ -505,7 +328,7 @@ def login():
     data = request.json
     email = data.get("email")
     password = data.get("password")
-    user_row = db.session.execute(db.select(Users).where(Users.email == email, Users.is_active == True)).scalar()
+    user_row = get_active_user_by_email(email=email)
     if user_row == None:
         response_body['message'] = 'Usuario no existente'
         return response_body, 404
@@ -523,85 +346,245 @@ def login():
         return response_body, 400
 
 
-@api.route('/users/<int:id>', methods=['GET', 'PUT'])
-def user(id):
-    response_body = {}
-    row = db.session.get(Users, id)
-    if not row:
-        response_body['message'] = f'El comentario con el id: {id} no existe en nuestro registros'
-        return response_body, 400
-    if request.method == 'GET':
-        response_body['results'] = row.serialize()
-        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
-        return response_body, 200
-    if request.method == 'PUT':
-        data = request.json
-        row.username = data['username']
-        row.email = data['email']
-        row.password = data['password']
-        row.phone_number = data['phone_number']
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
-        response_body['results'] = row.serialize()
-        return response_body, 200 
-
-
-# CRUD de Fantasy Coach
-@api.route('/fantasy-coaches', methods=['GET', 'POST'])
-def fantasy_coaches():
+"""
+    CRUD /teams
+    
+    GET /: Obtiene todos los equipos
+    POST /: Crea un equipo
+        Ejemplo de body: {"id": 1,
+                          "name": "Test FC",
+                          "logo" "https://media.api-sports.io/football/teams/1.png"}
+"""
+@api.route('/teams', methods=['GET', 'POST'])
+def teams():
     response_body = {}
     if request.method == 'GET':
-        rows = db.session.execute(db.select(FantasyCoaches)).scalars()
-        result = [row.serialize() for row in rows]
-        response_body['message'] = "List of fantasy coaches"
+        result = get_teams()
+        response_body['message'] = "List of teams"
         response_body['results'] = result
         return response_body, 200
     
     if request.method == 'POST':
         data = request.json
-        new_coach = FantasyCoaches(
-            coach_id = data.get('coach_id'),
-            fantasy_team_id = data.get('fantasy_team_id'),
-            points = 0,
-            market_value = 0,
-            clause_value = 0)
-        db.session.add(new_coach)
-        db.session.commit()
+        new_team = add_team(
+            uid=data.get("id"),
+            name=data.get('name'), 
+            logo=data.get('logo')
+        )
         response_body['message'] = f'Respuesta desde {request.method}'
-        response_body['results'] = new_coach.serialize()
+        response_body['results'] = new_team
         return response_body, 201
 
 
-@api.route('/fantasy-coaches/<int:id>', methods=['GET', 'PUT', 'DELETE'])
-def fantasy_coach(id):
-    response_body = {}
-    fantasy_coach = db.session.get(FantasyCoaches, id)
-    if not fantasy_coach:
-        response_body['message'] = "Fantasy coach not found"
-        return response_body, 404
+"""
+    CRUD /matches
     
+    GET /: Obtiene todos los partidos
+    POST /: Crea un partido
+        Ejemplo de body: {"data": 01/01/1970,
+                          "home_team_id": 1,
+                          "away_team_id": 2,
+                          "home_goals": 1,
+                          "away_goals": 0,
+                          "is_home_winner": True}
+"""
+@api.route('/matches', methods=['GET', 'POST'])
+def matches():
+    response_body = {}
     if request.method == 'GET':
-        response_body['message'] = f'Respuesta desde {request.method}'
-        response_body['results'] = fantasy_coach.serialize()
+        result = get_matches()
+        response_body['message'] = "List of matches"
+        response_body['results'] = result
         return response_body, 200
     
+    if request.method == 'POST':
+        data = request.json
+        new_match = add_match(
+            date = data.get('date'),
+            home_team_id = data.get('home_team_id'),
+            away_team_id = data.get('away_team_id'),
+            home_goals = data.get('home_goals'),
+            away_goals = data.get('away_goals'),
+            is_home_winner = data.get('is_home_winner')
+        )
+        response_body['message'] = f'Respuesta desde {request.method}'
+        response_body['results'] = new_match
+        return response_body, 201
+
+
+@api.route('/standings', methods=['GET', 'POST'])
+def standings():
+    response_body = {}
+    today = datetime.now()
+    league_day = datetime(today.year - 1, today.month, today.day)
+    if request.method == 'GET':
+        teams_data = calculate_standings(league_day)
+        response_body['message'] = f'Partidos hasta {league_day}'
+        response_body['results'] = sorted(teams_data, key=lambda d: d['points'], reverse=True)
+        return response_body, 200
+    if request.method == 'POST':
+        teams_data = get_standings()
+        if len(teams_data) == 0:
+            teams_data = initialize_standings()
+        teams_data = calculate_standings(league_day)
+        data = []
+        for team_data in teams_data:
+            new_standing = add_standing(
+                team_id = team_data.team_id,
+                points = team_data.points,
+                games_won = team_data.games_won,
+                games_draw = team_data.games_draw,
+                games_lost = team_data.games_lost,
+                goals_for = team_data.goals_for,
+                goals_against = team_data.goals_against,
+                form = team_data.form)
+            data.append(new_standing)
+        standings_data = get_standings()
+        response_body['message'] = 'Standings inicializados correctamente'
+        response_body['results'] = standings_data
+        return response_body, 201
+
+
+"""
+    CRUD /coaches
+    
+    GET /: Obtiene todos los entrenadores
+    POST /: Crea un entrenador
+        Ejemplo de body: {"id": 1,
+                          "name": "T. Coach",
+                          "first_name": "Test",
+                          "last_name": "Coach",
+                          "nationality": "Spain",
+                          "photo": "https://media.api-sports.io/football/coachs/1.png",
+                          "team_id": 1}
+    GET /<id>: Obtiene todos los datos de un entrenador según su id
+"""
+@api.route('/coaches', methods=['GET', 'POST'])
+def coaches():
+    response_body = {}
+    if request.method == 'GET':
+        result = get_coaches()
+        response_body['message'] = "List of coaches"
+        response_body['results'] = result
+        return response_body, 200
+    
+    if request.method == 'POST':
+        data = request.json
+        new_coach = add_coach(
+            uid = data.get("id"),
+            name = data.get('name'),
+            first_name = data.get('first_name'),
+            last_name = data.get('last_name'),
+            nationality = data.get('nationality'),
+            photo = data.get('photo'),
+            team_id = data.get('team_id'))
+        response_body['message'] = f'Respuesta desde {request.method}'
+        response_body['results'] = new_coach
+        return response_body, 201
+
+
+@api.route('/coaches/<int:id>', methods=['GET'])
+def coach(id):
+    response_body = {}
+    coach = get_coach_by_id(id=id)
+    if not coach:
+        response_body['message'] = "Coach not found"
+        return response_body, 404
+    return coach.serialize()
+
+
+"""
+    CRUD /players
+    
+    GET /: Obtiene todos los jugadores
+    POST /: Crea un entrenador
+        Ejemplo de body: {"id": 1,
+                          "name": "T. Coach",
+                          "first_name": "Test",
+                          "last_name": "Coach",
+                          "number": 1,
+                          "nationality": "Spain",
+                          "position": "Goalkeeper",
+                          "photo": "https://media.api-sports.io/football/players/1.png",
+                          "team_id": 1}
+"""
+@api.route('/players', methods=['GET', 'POST'])
+def players():
+    response_body = {}
+    if request.method == 'GET':
+        result = get_players()
+        response_body['message'] = "List of players"
+        response_body['results'] = result
+        return response_body, 200
+
+    if request.method == 'POST':
+        data = request.json
+        new_player = add_player(
+            name = data.get('name'),
+            first_name = data.get('first_name'),
+            last_name = data.get('last_name'),
+            number = data.get('number'),
+            nationality = data.get('nationality'),
+            position = data.get('position'),
+            photo = data.get('photo'),
+            team_id = data.get('team_id'))
+        response_body['message'] = f'Respuesta desde {request.method}'
+        response_body['results'] = new_player.serialize()
+        return response_body, 201
+
+
+@api.route('/players-market', methods=['GET'])
+def players_market():
+    limit = request.args.get("limit")
+    page = request.args.get("page")
+    response_body = {}
+    result = get_players_market(page=page, limit=limit)
+    
+    response_body['message'] = "List of players"
+    response_body['results'] = result
+    return response_body, 200
+
+
+@api.route('/fantasy-leagues', methods=['GET', 'POST'])
+def fantasy_leagues():
+    response_body = {}
+    if request.method == 'GET':
+        result = get_fantasy_leagues()
+        response_body['message'] = f'List of fantasy league'
+        response_body['results'] = result
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json
+        new_league = add_fantasy_league(name=data.get('name'),
+                                    photo=data.get('photo'))     
+        response_body['message'] = f'Respuesta desde el {request.method}'
+        response_body['results'] = new_league.serialize()
+        return response_body, 201
+
+
+@api.route('/fantasy-leagues/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+def fantasy_league(id):
+    response_body = {}
+    row = get_fantasy_league(id=id)
+    if not row:
+        response_body['message'] = f'La liga de fantasy con el id: {id} no existe en nuestro registros'
+        return response_body, 404
+    if request.method == 'GET':
+        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
+        response_body['results'] = row.serialize()
+        return response_body, 200
     if request.method == 'PUT':
         data = request.json
-        fantasy_coach.coach_id = data.get("coach_id", fantasy_coach.coach_id)
-        fantasy_coach.fantasy_team_id = data.get("fantasy_team_id", fantasy_coach.fantasy_team_id)
-        fantasy_coach.points = data.get("points", fantasy_coach.points)
-        fantasy_coach.market_value = data.get("market_value", fantasy_coach.market_value)
-        fantasy_coach.clause_value = data.get("clause_value", fantasy_coach.clause_value)
-        db.session.commit()
-        response_body['message'] = f'Respuesta desde {request.method}'
-        response_body['results'] = fantasy_coach.serialize()
+        row = update_fantasy_league(row, data.get('name'), data.get('photo'))
+        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
+        response_body['results'] = row.serialize()
         return response_body, 200
-    
     if request.method == 'DELETE':
-        db.session.delete(fantasy_coach)
+        db.session.delete(row)
         db.session.commit()
-        response_body['message'] = f'Respuesta desde {request.method}'
+        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
         return response_body, 200
+    return row.serialize()
 
 
 # CRUD de Fantasy Team
@@ -609,22 +592,17 @@ def fantasy_coach(id):
 def fantasy_teams():
     response_body = {}
     if request.method == 'GET':
-        rows = db.session.execute(db.select(FantasyTeams)).scalars()
-        result = [row.serialize() for row in rows]
+        result = get_fantasy_teams()
         response_body['message'] = "List of fantasy teams"
         response_body['results'] = result
         return response_body, 200
     
     if request.method == 'POST':
         data = request.json
-        new_team = FantasyTeams(
+        new_team = add_fantasy_team(
             user_id = data.get('user_id'),
             name = data.get('name'),
-            logo = data.get('logo'),
-            formation = "4-3-3",
-            points = 0)
-        db.session.add(new_team)
-        db.session.commit()
+            logo = data.get('logo'))
         response_body['message'] = f'Respuesta desde {request.method}'
         response_body['results'] = new_team.serialize()
         return response_body, 201
@@ -633,7 +611,7 @@ def fantasy_teams():
 @api.route('/fantasy-teams/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 def fantasy_team(id):
     response_body = {}
-    fantasy_team = db.session.get(FantasyTeams, id)
+    fantasy_team = get_fantasy_team_by_id(id=id)
     if not fantasy_team:
         response_body['message'] = "Fantasy team not found"
         return response_body, 404
@@ -645,12 +623,13 @@ def fantasy_team(id):
     
     if request.method == 'PUT':
         data = request.json
-        fantasy_team.user_id = data.get("user_id", fantasy_team.user_id)
-        fantasy_team.name = data.get("name", fantasy_team.name)
-        fantasy_team.logo = data.get("logo", fantasy_team.logo)
-        fantasy_team.formation = data.get("formation", fantasy_team.formation)
-        fantasy_team.points = data.get("points", fantasy_team.points)
-        db.session.commit()
+        fantasy_team = update_fantasy_team(
+            fantasy_team=fantasy_team,
+            name=data.get("name", fantasy_team.name),
+            logo=data.get("logo", fantasy_team.logo),
+            formation=data.get("formation", fantasy_team.formation),
+            points=data.get("points", fantasy_team.points)
+        )
         response_body['message'] = f'Respuesta desde {request.method}'
         response_body['results'] = fantasy_team.serialize()
         return response_body, 200
@@ -660,27 +639,60 @@ def fantasy_team(id):
         db.session.commit()
         response_body['message'] = f'Respuesta desde {request.method}'
         return response_body, 200
- 
+
 
 @api.route('/fantasy-teams/<int:id>/fantasy-players', methods=['GET'])
 def fantasy_players_by_team(id):
     response_body = {}
-    fantasy_team = db.session.get(FantasyTeams, id)
+    fantasy_team = get_fantasy_team_by_id(id=id)
     if not fantasy_team:
         response_body['message'] = "Fantasy team not found"
         return response_body, 404
-    
-    rows = db.session.execute(db.select(FantasyPlayers).where(FantasyPlayers.fantasy_team_id == id)).scalars()
-    data = []
-    for row in rows:
-        item = row.serialize()
-        player = db.session.execute(db.select(Players).where(Players.uid == item['player_id'])).scalar().serialize()
-        item['name'] = player['name']
-        item['photo'] = player['photo']
-        data.append(item)
+    data = get_fantasy_players_by_team(id=id)
     response_body['message'] = f'Respuesta desde {request.method}'
     response_body['results'] = data
     return response_body, 200
+
+
+@api.route('/fantasy-league-teams', methods=['GET', 'POST'])
+def fantasy_league_teams():
+    response_body = {}
+    if request.method == 'GET':
+        result = get_fantasy_league_teams()
+        response_body['message'] = f'List of fantasy league teams'
+        response_body['results'] = result
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json
+        new_league_team = add_fantasy_league_team(fantasy_team_id=data.get('fantasy_team_id'),
+                                             fantasy_league_id=data.get('fantasy_league_id'))
+        response_body['message'] = f'Respuesta desde el {request.method}'
+        response_body['results'] = new_league_team.serialize()
+        return response_body, 201
+
+
+@api.route('/fantasy-league-teams/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+def fantasy_league_team(id):
+    response_body = {}
+    row = get_fantasy_league_team_by_id(id=id)
+    if not row:
+        response_body['message'] = f'La liga de fantasy con el id: {id} no existe en nuestro registros'
+        return response_body, 404
+    if request.method == 'GET':
+        response_body['results'] = row.serialize()
+        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
+        return response_body, 200
+    if request.method == 'PUT':
+        data = request.json
+        row = update_fantasy_league_team(row, data.get('fantasy_team_id'), data.get('fantasy_league_id'))
+        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
+        response_body['results'] = row.serialize()
+        return response_body, 200
+    if request.method == 'DELETE':
+        db.session.delete(row)
+        db.session.commit()
+        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
+        return response_body, 200
 
 
 # CRUD de Fantasy Player
@@ -688,22 +700,18 @@ def fantasy_players_by_team(id):
 def fantasy_players():
     response_body = {}
     if request.method == 'GET':
-        rows = db.session.execute(db.select(FantasyPlayers)).scalars()
-        result = [row.serialize() for row in rows]
+        result = get_fantasy_players()
         response_body['message'] = "List of fantasy players"
         response_body['results'] = result
         return response_body, 200
     
     if request.method == 'POST':
         data = request.json
-        new_player = FantasyPlayers(
+        new_player = add_fantasy_player(
             player_id = data.get('player_id'),
             fantasy_team_id = data.get('fantasy_team_id'),
             position = data.get('position'),
-            points = 0,
             clause_value = data.get('clause_value'))
-        db.session.add(new_player)
-        db.session.commit()
         response_body['message'] = f'Respuesta desde {request.method}'
         response_body['results'] = new_player.serialize()
         return response_body, 201
@@ -712,7 +720,7 @@ def fantasy_players():
 @api.route('/fantasy-players/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 def fantasy_player(id):
     response_body = {}
-    fantasy_player = db.session.execute(db.select(FantasyPlayers).where(FantasyPlayers.player_id == id)).scalar()
+    fantasy_player = get_fantasy_player_by_id(id)
     if not fantasy_player:
         response_body['message'] = "Fantasy player not found"
         return response_body, 404
@@ -724,14 +732,11 @@ def fantasy_player(id):
     
     if request.method == 'PUT':
         data = request.json
-        fantasy_player.player_id = data.get("player_id", fantasy_player.player_id)
-        fantasy_player.fantasy_team_id = data.get("fantasy_team_id", fantasy_player.fantasy_team_id)
-        fantasy_player.position = data.get("position", fantasy_player.position)
-        fantasy_player.points = data.get("points", fantasy_player.points)
-        fantasy_player.market_value = data.get("market_value", fantasy_player.market_value)
-        fantasy_player.clause_value = data.get("clause_value", fantasy_player.clause_value)
-        fantasy_player.is_scoutable = data.get("is_scoutable", fantasy_player.is_scoutable)
-        db.session.commit()
+        fantasy_player = update_fantasy_player(fantasy_player=fantasy_player,
+                                               fantasy_team_id=data.get('fantasy_team_id', fantasy_player.fantasy_team_id),
+                                               points=data.get('points', fantasy_player.points),
+                                               clause_value=data.get('clause_value', fantasy_player.clause_value),
+                                               is_scoutable=data.get('is_scoutable', fantasy_player.is_scoutable))
         response_body['message'] = f'Respuesta desde {request.method}'
         response_body['results'] = fantasy_player.serialize()
         return response_body, 200
@@ -746,14 +751,102 @@ def fantasy_player(id):
 @api.route('/fantasy-players/<int:id>/fantasy-teams', methods=['GET'])
 def fantasy_team_by_player(id):
     response_body = {}
-    fantasy_player_data = fantasy_player(id)
-    if(fantasy_player_data[1] != 200):
+    fantasy_player = get_fantasy_player_with_team_data(id)
+    if fantasy_player is None:
         return response_body, 404
-    fantasy_player_data = fantasy_player_data[0]['results']
-    fantasy_team_data = db.session.execute(db.select(FantasyTeams).where(FantasyTeams.id == fantasy_player_data['fantasy_team_id'])).scalar()
-    fantasy_player_data['fantasy_team'] = fantasy_team_data.serialize()
-    response_body['results'] = fantasy_player_data
+    response_body['results'] = fantasy_player
     return response_body, 200
+
+
+@api.route('/fantatsy-standings', methods=['GET', 'POST'])
+def fantasy_standings():
+    response_body = {}
+    if request.method == 'GET':
+        result = get_fantasy_standings()
+        response_body['message'] = f'List of fantasy standings'
+        response_body['results'] = result
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json
+        new_standing = add_fantasy_standing(fantasy_team_id=data.get('fantasy_team_id'))
+        response_body['message'] = f'Respuesta desde el {request.method}'
+        response_body['results'] = new_standing.serialize()
+        return response_body, 201
+
+
+@api.route('/fantasy-standings/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+def fantasy_standing(id):
+    response_body = {}
+    row = get_fantasy_standing(id=id)
+    if not row:
+        response_body['message'] = f'El fantasy standing con el id: {id} no existe en nuestro registros'
+        return response_body, 404
+    if request.method == 'GET':
+        response_body['results'] = row.serialize()
+        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
+        return response_body, 200
+    if request.method == 'PUT':
+        data = request.json
+        row = update_fantasy_standing(row, data.get('fantasy_team_id'))
+        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
+        response_body['results'] = row.serialize()
+        return response_body, 200
+    if request.method == 'DELETE':
+        db.session.delete(row)
+        db.session.commit()
+        response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
+        return response_body, 200
+
+
+# CRUD de Fantasy Coach
+@api.route('/fantasy-coaches', methods=['GET', 'POST'])
+def fantasy_coaches():
+    response_body = {}
+    if request.method == 'GET':
+        result = get_fantasy_coaches()
+        response_body['message'] = "List of fantasy coaches"
+        response_body['results'] = result
+        return response_body, 200
+    
+    if request.method == 'POST':
+        data = request.json
+        new_coach = add_fantasy_coach(
+            coach_id = data.get('coach_id'),
+            fantasy_team_id = data.get('fantasy_team_id'))
+        response_body['message'] = f'Respuesta desde {request.method}'
+        response_body['results'] = new_coach.serialize()
+        return response_body, 201
+
+
+@api.route('/fantasy-coaches/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+def fantasy_coach(id):
+    response_body = {}
+    fantasy_coach = get_fantasy_coach(id=id)
+    if not fantasy_coach:
+        response_body['message'] = "Fantasy coach not found"
+        return response_body, 404
+    
+    if request.method == 'GET':
+        response_body['message'] = f'Respuesta desde {request.method}'
+        response_body['results'] = fantasy_coach.serialize()
+        return response_body, 200
+    
+    if request.method == 'PUT':
+        data = request.json
+        fantasy_coach = update_fantasy_coach(fantasy_coach=fantasy_coach,
+                                             fantasy_team_id=data.get("fantasy_team_id"),
+                                             points=data.get("points"),
+                                             market_value=data.get("market_value"),
+                                             clause_value=data.get("clause_value"))
+        response_body['message'] = f'Respuesta desde {request.method}'
+        response_body['results'] = fantasy_coach.serialize()
+        return response_body, 200
+    
+    if request.method == 'DELETE':
+        db.session.delete(fantasy_coach)
+        db.session.commit()
+        response_body['message'] = f'Respuesta desde {request.method}'
+        return response_body, 200
 
 
 @api.route('/remove-bg', methods=['POST'])
@@ -797,164 +890,3 @@ def remove_bg():
     _, buffer = cv2.imencode(".png", img)
     response_body['results'] = base64.b64encode(buffer).decode("utf-8")
     return response_body, 200
-
-
-#CRUD Actualizar Datos Usuario
-@api.route('/update-user', methods=['PUT'])
-@jwt_required()
-def update_user():
-    response_body = {}
-    user_id = get_jwt_identity()
-    data = request.json
-    user = db.session.execute(db.select(Users).where(Users.id == user_id)).scalar()
-    if not user:
-        response_body["message"] = "Usuario no encontrado"
-        return response_body, 404
-    
-    user.username = data.get("username", user.username)
-    user.email = data.get("email", user.email)
-    user.phone_number = data.get("phone_number", user.phone_number)
-
-    db.session.commit()
-
-    response_body["message"] = "Datos actualizados correctamente",
-    response_body["results"] = user.serialize()
-    return response_body, 200
-
-
-# CRUD Eliminar Usuario
-@api.route('/delete-user', methods=['DELETE'])
-@jwt_required()
-def delete_user():
-    response_body = {}
-    user_id = get_jwt_identity()
-    
-    user = db.session.get(Users, user_id)
-    if not user:
-        response_body["message"] = "Usuario no encontrado"
-        return response_body, 404
-
-    db.session.delete(user)
-    db.session.commit()
-
-    response_body["message"] = "Cuenta eliminada correctamente"
-    return response_body, 200
-
-
-# CRUD Cambiar Contraseña
-@api.route('/reset-password', methods=['PUT'])
-@jwt_required()
-def reset_password():
-    response_body = {}
-    user_id = get_jwt_identity()
-    data = request.json
-    new_password = data.get("password")
-
-    user = db.session.get(Users, user_id) 
-    if not user:
-        response_body["message"] = "Usuario no encontrado"
-        return response_body, 404
-    
-    user.password = generate_password_hash(new_password)
-
-    db.session.commit()
-
-    response_body["message"] = "Contraseña actualizada correctamente"
-    return response_body, 200
-
-
-@api.route('/users/<int:id>/fantasy-teams', methods=['GET'])
-def fantasy_team_by_user(id):
-    response_body = {}
-    row = db.session.execute(db.select(FantasyTeams).where(FantasyTeams.user_id == id)).scalar()
-    if not row:
-        response_body['message'] = "Fantasy team not found"
-        return response_body, 404
-
-    if request.method == 'GET':
-        response_body['message'] = f'Respuesta desde {request.method}'
-        response_body['results'] = row.serialize()
-        return response_body, 200
-    return row.serialize()
-
-
-@api.route('/users/<int:id>/join-league/<int:league_id>', methods=['POST'])
-def join_league(id, league_id):
-    response_body = {}
-    fantasy_team_row = fantasy_team_by_user(id)
-    fantasy_league_row = fantasy_league(league_id)
-    print(fantasy_team_row)
-    new_team_of_league = FantasyLeagueTeams(
-        fantasy_league_id=int(fantasy_league_row['id']),
-        fantasy_team_id=int(fantasy_team_row['id'])
-    )
-    db.session.add(new_team_of_league)
-    db.session.commit()
-
-    response_body['message'] = f'Respuesta desde {request.method}'
-    response_body['results'] = new_team_of_league.serialize()
-    return response_body, 201
-
-
-@api.route('/standings', methods=['GET', 'POST'])
-def standings():
-    response_body = {}
-    today = datetime.now()
-    league_day = datetime(today.year - 1, today.month, today.day)
-    rows_matches = db.session.execute(db.select(Matches).where(Matches.date <= league_day).order_by(Matches.date)).scalars()
-    matches_today = [match_today.serialize() for match_today in rows_matches]
-    if request.method == 'GET':
-        teams_data = [row.serialize() for row in db.session.execute(db.select(Standings)).scalars()]
-        for match in matches_today:
-            home_team = next(team_data for team_data in teams_data if team_data['team_id'] == match['home_team_id'])
-            away_team = next(team_data for team_data in teams_data if team_data['team_id'] == match['away_team_id'])
-            home_team['goals_for'] += match['home_goals']
-            home_team['goals_against'] += match['away_goals']
-            away_team['goals_for'] += match['away_goals']
-            away_team['goals_against'] += match['home_goals']
-            if match['home_goals'] > match['away_goals']:
-                home_team['points'] += 3
-                home_team['games_won'] += 1
-                home_team['form'] += "V"
-                away_team['games_lost'] += 1
-                away_team['form'] += "D"
-            elif match['home_goals'] == match['away_goals']:
-                home_team['points'] += 1
-                home_team['form'] += "E"
-                home_team['games_draw'] += 1
-                away_team['points'] += 1
-                away_team['form'] += "E"
-                away_team['games_draw'] += 1
-            else:
-                away_team['points'] += 3
-                away_team['form'] += "V"
-                away_team['games_won'] += 1
-                home_team['form'] += "D"
-                home_team['games_lost'] += 1
-            
-            if len(home_team['form']) > 5:
-                home_team['form'] = home_team['form'][:5]
-            if len(away_team['form']) > 5:
-                away_team['form'] = away_team['form'][:5]
-        response_body['message'] = f'Partidos hasta {league_day}'
-        response_body['results'] = sorted(teams_data, key=lambda d: d['points'], reverse=True)
-        return response_body, 200
-    if request.method == 'POST':
-        teams_data = [row.serialize() for row in db.session.execute(db.select(Teams)).scalars()]
-        for team_data in teams_data:
-            new_standing = Standings(
-                team_id = team_data['uid'],
-                points = 0,
-                games_won = 0,
-                games_draw = 0,
-                games_lost = 0,
-                goals_for = 0,
-                goals_against = 0,
-                form = ''
-            )
-            db.session.add(new_standing)
-        db.session.commit()
-        standings_data = [row.serialize() for row in db.session.execute(db.select(Standings)).scalars()]
-        response_body['message'] = 'Standings inicializados correctamente'
-        response_body['results'] = standings_data
-        return response_body, 201

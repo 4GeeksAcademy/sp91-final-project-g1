@@ -47,7 +47,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 			},
 			addUser: async (dataToSend) => {
-				const uri = `${process.env.BACKEND_URL}/api/fantatsy-league-teams`
+				const uri = `${process.env.BACKEND_URL}/api/fantasy-league-teams`
 				const body = {
 					fantasy_team_id: dataToSend.fantasy_team_id,
 					fantasy_league_id: dataToSend.fantasy_league_id,
@@ -209,7 +209,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 				},
 			},
 			updateUser: async (dataToSend) => {
-				const uri = `${process.env.BACKEND_URL}/api/update-user`
+				const userData = getActions().getFromLocalStorage('user')
+				const uri = `${process.env.BACKEND_URL}/api/users/${userData.id}`
 				const options = {
 					method: 'PUT',
 					headers: {
@@ -229,7 +230,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 				return response;
 			},
 			deleteUser: async () => {
-				const uri = `${process.env.BACKEND_URL}/api/delete-user`
+				const userData = getActions().getFromLocalStorage('user')
+				const uri = `${process.env.BACKEND_URL}/api/users/${userData.id}`
 				const options = {
 					method: 'DELETE',
 					headers: {
@@ -246,7 +248,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				setStore({ user: null });
 			},
 			resetPassword: async (dataToSend) => {
-				const uri = `${process.env.BACKEND_URL}/api/reset-password`;
+				const uri = `${process.env.BACKEND_URL}/api/users/reset-password`;
 				const options = {
 					method: 'PUT',
 					headers: {
