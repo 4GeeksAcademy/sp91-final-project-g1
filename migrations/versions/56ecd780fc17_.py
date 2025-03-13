@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: c6d3de4633e9
+Revision ID: 56ecd780fc17
 Revises: 
-Create Date: 2025-02-24 18:34:19.805864
+Create Date: 2025-03-11 18:48:02.886193
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'c6d3de4633e9'
+revision = '56ecd780fc17'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -39,6 +39,7 @@ def upgrade():
     sa.Column('password', sa.String(length=255), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('phone_number', sa.String(length=20), nullable=True),
+    sa.Column('money', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('phone_number'),
@@ -48,9 +49,9 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('uid', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
-    sa.Column('first_name', sa.String(length=50), nullable=False),
-    sa.Column('last_name', sa.String(length=50), nullable=False),
-    sa.Column('nationality', sa.String(length=50), nullable=False),
+    sa.Column('first_name', sa.String(length=50), nullable=True),
+    sa.Column('last_name', sa.String(length=50), nullable=True),
+    sa.Column('nationality', sa.String(length=50), nullable=True),
     sa.Column('photo', sa.String(length=255), nullable=True),
     sa.Column('team_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['team_id'], ['teams.uid'], ),
@@ -139,8 +140,7 @@ def upgrade():
     sa.Column('is_scoutable', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['fantasy_team_id'], ['fantasy_teams.id'], ),
     sa.ForeignKeyConstraint(['player_id'], ['players.uid'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('position')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('fantasy_standings',
     sa.Column('rank', sa.Integer(), nullable=False),

@@ -11,6 +11,7 @@ class Users(db.Model):
     password = db.Column(db.String(255), unique=False, nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
     phone_number = db.Column(db.String(20), unique=True, nullable=True)
+    money = db.Column(db.Integer, unique=False, nullable=False, default=15000000)
 
     def __repr__(self):
         return f'<User {self.username} - {self.email}>'
@@ -21,7 +22,8 @@ class Users(db.Model):
                 "username": self.username,
                 "email": self.email,
                 "is_active": self.is_active,
-                "phone_number": self.phone_number}
+                "phone_number": self.phone_number,
+                "money": self.money}
 
 
 class FantasyTeams(db.Model):
@@ -128,11 +130,9 @@ class FantasyPlayers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.Integer, db.ForeignKey("players.uid")) 
     fantasy_team_id = db.Column(db.Integer, db.ForeignKey("fantasy_teams.id")) 
-    position = db.Column(db.Integer, unique=True, nullable=False)
+    position = db.Column(db.String(50), unique=False, nullable=False)
     points = db.Column(db.Integer, unique=False, nullable=False)
-    market_value = db.Column(db.Integer, unique=False, nullable=False)
     clause_value = db.Column(db.Integer, unique=False, nullable=False)
-    is_scoutable = db.Column(db.Boolean, unique=False, nullable=False)
     player_to = db.relationship('Players', foreign_keys=[player_id], backref=db.backref('fantasy_player_is', lazy='select'))
     fantasy_team_to = db.relationship('FantasyTeams', foreign_keys=[fantasy_team_id], backref=db.backref('fantasy_player_of', lazy='select'))
 
@@ -145,9 +145,7 @@ class FantasyPlayers(db.Model):
             "fantasy_team_id": self.fantasy_team_id,
             "position": self.position,
             "points": self.points,
-            "market_value": self.market_value,
-            "clause_value": self.clause_value,
-            "is_scoutable": self.is_scoutable}
+            "clause_value": self.clause_value}
 
 
 class Teams(db.Model):
@@ -162,7 +160,7 @@ class Teams(db.Model):
     def serialize(self):
         return {"uid": self.uid,
                 "name": self.name,
-                "photo": self.photo}
+                "logo": self.logo}
 
 
 class Standings(db.Model):
@@ -181,8 +179,7 @@ class Standings(db.Model):
         return f'<Standings {self.rank} - {self.team_id}>'
  
     def serialize(self):
-        return {"rank":self.rank,
-                "team_id": self.team_id,
+        return {"team_id": self.team_id,
                 "points": self.points,
                 "games_won": self.games_won,
                 "games_draw": self.games_draw,
@@ -196,9 +193,9 @@ class Coaches(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uid = db.Column(db.Integer, unique=True, nullable=False)
     name = db.Column(db.String(50), unique=False, nullable=False)
-    first_name = db.Column(db.String(50), unique=False, nullable=False)
-    last_name = db.Column(db.String(50), unique=False, nullable=False)
-    nationality = db.Column(db.String(50), unique=False, nullable=False)
+    first_name = db.Column(db.String(50), unique=False, nullable=True, default="")
+    last_name = db.Column(db.String(50), unique=False, nullable=True, default="")
+    nationality = db.Column(db.String(50), unique=False, nullable=True)
     photo = db.Column(db.String(255), unique=False, nullable=True)
     team_id = db.Column(db.Integer, db.ForeignKey("teams.uid")) 
     team_to = db.relationship('Teams', foreign_keys=[team_id], backref=db.backref('coach_of', lazy='select'))
@@ -226,6 +223,7 @@ class Players(db.Model):
     nationality = db.Column(db.String(50), unique=False, nullable=False)
     position = db.Column(db.String(50), unique=False, nullable=False)
     photo = db.Column(db.String(255), unique=False, nullable=True)
+    market_value = db.Column(db.Integer, unique=False, nullable=False, default=1000000)
     team_id = db.Column(db.Integer, db.ForeignKey("teams.uid"))
     team_to = db.relationship('Teams', foreign_keys=[team_id], backref=db.backref('player_of', lazy='select'))
 
@@ -241,6 +239,7 @@ class Players(db.Model):
                 "nationality": self.nationality,
                 "position": self.position,
                 "photo": self.photo,
+                "market_value": self.market_value,
                 "team_id": self.team_id}    
 
 

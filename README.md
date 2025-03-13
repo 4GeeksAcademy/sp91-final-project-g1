@@ -70,6 +70,39 @@ Every Github codespace environment will have **its own database**, so if you're 
 1. Install the packages: `$ npm install`
 2. Start coding! start the webpack dev server `$ npm run start`
 
+### Database population
+
+To correctly populate your database follow these steps:
+
+1. Start by populating the teams using the URL `<YOUR-CODESPACE-URL>/api/populate-db-1`. This will fill the *teams* and *matches* tables
+2. Next, we will populate the *coaches* table. Due tho our external API limit of 10 requests per minute, we will have to call the same endpoint two times to correctly populate our 20 coaches. The two URLs are:
+```
+<YOUR-CODESPACE-BACKEND-URL>/api/populate-coaches?team_ids=529,530,531,532,533,534,536,538,541,542
+
+<YOUR-CODESPACE-BACKEND-URL>/api/populate-coaches?team_ids=543,546,547,548,715,723,724,727,728,798
+```
+
+> [!NOTE]  
+> Remember waiting 1 minute between petitions
+
+3. Next we will populate our *players* table. We will have to do the same that we did in step 2 due to request rate, but in this case we will have to do 7 petitions, because the squads have various pages. The URLs are
+```
+<YOUR-CODESPACE-BACKEND-URL>/api/populate-players?team_ids=529,530,531
+<YOUR-CODESPACE-BACKEND-URL>/api/populate-players?team_ids=532,533,534
+<YOUR-CODESPACE-BACKEND-URL>/api/populate-players?team_ids=536,538,541
+<YOUR-CODESPACE-BACKEND-URL>/api/populate-players?team_ids=542,543,546
+<YOUR-CODESPACE-BACKEND-URL>/api/populate-players?team_ids=547,548,715
+<YOUR-CODESPACE-BACKEND-URL>/api/populate-players?team_ids=723,724,727
+<YOUR-CODESPACE-BACKEND-URL>/api/populate-players?team_ids=728,798
+```
+
+> [!NOTE]  
+> Remember waiting 1 minute between petitions
+
+It's important to **follow these steps in this exact order** because the relationships of the tables may cause failure when populating.
+
+When you finish populating, you will have used 77 of the 100 daily petitions we have currently available in the external API, so please do not use it much
+
 ## Publish your website!
 
 This boilerplate it's 100% read to deploy with Render.com and Heroku in a matter of minutes. Please read the [official documentation about it](https://start.4geeksacademy.com/deploy).

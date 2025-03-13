@@ -7,7 +7,7 @@
 */
 
 .overlay {
-    height: calc(100% - 115px);
+    height: calc(100% - 150px);
 }
 .background {
     position: fixed;

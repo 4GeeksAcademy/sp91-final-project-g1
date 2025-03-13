@@ -1,16 +1,20 @@
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
-from flask_jwt_extended import create_access_token
 import requests
 import dotenv
 import os
 import bcrypt
 from flask import Flask, request, jsonify, url_for, Blueprint
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-from api.models import db, Teams, Matches, Coaches, Players, FantasyCoaches, FantasyTeams, FantasyPlayers, Users, FantasyLeagues, FantasyStandings, FantasyLeagueTeams
+from api.models import db, Teams, Matches, Coaches, Players, FantasyCoaches, FantasyTeams, FantasyPlayers, Users, FantasyLeagues, FantasyStandings, FantasyLeagueTeams, Standings
 from datetime import datetime
+import numpy as np
+import urllib.request
+import base64
+import cv2
 
 
 api = Blueprint('api', __name__)
@@ -39,7 +43,7 @@ def populate_fixtures(headers, params):
             uid = fixture.get('id'),
             date = fixture.get('date'),
             home_team_id = teams.get('home').get('id'),
-            away_team_id = teams.get('ayay').get('id'),
+            away_team_id = teams.get('away').get('id'),
             home_goals = home_goals,
             away_goals = away_goals,
             is_home_winner = home_goals > away_goals)
@@ -76,6 +80,9 @@ def populate_coach(params, headers):
             start_date = datetime.strptime(coach_team.get('start'), '%Y-%m-%d')
             end_date = datetime.strptime(coach_team.get('end'), '%Y-%m-%d') if coach_team.get('end') is not None else datetime(9999, 1, 1)
             if (end_date is None and start_date < fecha_limite) or (end_date is not None and end_date > fecha_limite):
+                if db.session.execute(db.select(Coaches).where(Coaches.uid == coach.get("id"))).scalar() is not None:
+                    print(f'Entrenador repetido: {coach.get("id")} = {coach.get("firstname")} {coach.get("lastname")}')
+                    return
                 new_coach = Coaches(
                     uid = coach.get('id'),
                     name = coach.get('name'),
@@ -88,18 +95,97 @@ def populate_coach(params, headers):
                 return  # Evitamos que hayan dos entrenadores por equipo o que el mismo entrenador salga dos veces
 
 
+def populate_players(initial_params, headers):
+    params = initial_params
+    url = f'https://{os.getenv("API_URL")}/players'
+
+    while True:
+        result = requests.get(url, params=params, headers=headers)
+        data = result.json()
+        current = data.get("paging").get("current")
+        total = data.get("paging").get("total")
+        rows = data.get("response")
+        print(f'page {current} of {total} - team: {params.get("team")}')
+        for row in rows:
+            player_row = row.get("player")
+            stats = row.get("statistics")[0]
+            if db.session.execute(db.select(Players).where(Players.uid == player_row.get("id"))).scalar() is not None:
+                print(f'Jugador repetido: {player_row.get("id")} = {player_row.get("firstname")} {player_row.get("lastname")} - team: {stats.get("team").get("id")}')
+                continue
+            player = Players(
+                uid=player_row.get("id"),
+                name=player_row.get("name"),
+                first_name=player_row.get("firstname") if player_row.get("firstname") is not None else "",
+                number=0,  # TODO: Quitar esta variable
+                last_name=player_row.get("lastname") if player_row.get("lastname") is not None else "",
+                nationality=player_row.get("nationality"),
+                position=stats.get("games").get("position"),
+                photo=player_row.get("photo"),
+                team_id=params.get("team")
+            )
+            db.session.add(player)
+        if current == total:
+            print("----------------------------------------")
+            break
+        params["page"] = current + 1
+    db.session.commit()
+    return
+
+
 @api.route('/populate-db-1', methods=['GET'])
 def populate_db():
     params = { "league": 140, "season": 2023}
     headers = { "x-rapidapi-host": os.getenv("API_URL"),
                 "x-rapidapi-key": os.getenv("API_KEY") }
+    populate_teams(params=params, headers=headers)
     populate_fixtures(params=params, headers=headers)
-    teams = populate_teams(params=params, headers=headers)
-    for team in teams:
-        params = { "team": team.id }
-        populate_coach(params=params, headers=headers)
     db.session.commit()
     print("Base de datos actualizada correctamente")
+    return {}, 200
+
+
+"""
+    Ejecutar esta función después de la de arriba, los ids del equipo se pasarán por parámetro. 
+    Hay que hacer varias llamadas debido a la restriccion de 10 peticiones por minuto
+
+    @params peticion 1: ?team_ids=529,530,531
+    @params peticion 2: ?team_ids=532,533,534
+    @params peticion 3: ?team_ids=536,538,541
+    @params peticion 4: ?team_ids=542,543,546
+    @params peticion 5: ?team_ids=547,548,715
+    @params peticion 6: ?team_ids=723,724,727
+    @params peticion 7: ?team_ids=728,798
+"""
+@api.route('/populate-players', methods=['GET'])
+def populate_db_players():
+    ids = request.args.get("team_ids").split(",")
+    for id in ids:
+        params = { "league": 140, "season": 2023, "team": id }
+        headers = { "x-rapidapi-host": os.getenv("API_URL"),
+                "x-rapidapi-key": os.getenv("API_KEY") }
+        populate_players(initial_params=params, headers=headers)
+    db.session.commit()
+    print("Jugadores actualizados")
+    return {}, 200
+
+
+"""
+    Ejecutar esta función después de /populate-db-1, los ids del equipo se pasarán por parámetro. 
+    Hay que hacer varias llamadas debido a la restriccion de 10 peticiones por minuto
+
+    @params peticion 1: ?team_ids=529,530,531,532,533,534,536,538,541,542
+    @params peticion 2: ?team_ids=543,546,547,548,715,723,724,727,728,798
+"""
+@api.route('/populate-coaches', methods=['GET'])
+def populate_db_coaches():
+    ids = request.args.get("team_ids").split(",")
+    headers = { "x-rapidapi-host": os.getenv("API_URL"),
+                "x-rapidapi-key": os.getenv("API_KEY") }
+    for id in ids:
+        params = { "team": id }
+        populate_coach(params=params, headers=headers)
+    db.session.commit()
+    print("Entrenadores actualizados")
     return {}, 200
 
 
@@ -154,7 +240,7 @@ def matches():
     
 
 # CRUD de Coaches
-@api.route('/coachs', methods=['GET', 'POST'])
+@api.route('/coaches', methods=['GET', 'POST'])
 def coaches():
     response_body = {}
     if request.method == 'GET':
@@ -179,13 +265,37 @@ def coaches():
         response_body['results'] = new_coach.serialize()
         return response_body, 201
 
-@api.route('/coachs/<int:id>', methods=['GET'])
+
+@api.route('/coaches/<int:id>', methods=['GET'])
 def coach(id):
     response_body = {}
     coach = db.session.get(Coaches, id)
     if not coach:
         response_body['message'] = "Coach not found"
         return response_body, 404
+
+
+@api.route('/players-market', methods=['GET'])
+def players_market():
+    limit = request.args.get("limit")
+    page = request.args.get("page")
+    response_body = {}
+    players_rows = db.session.execute(db.select(Players).limit(limit).offset(int(page)*int(limit))).scalars()
+
+    def serialize(row):
+        serialized_row = row.serialize()
+        team_row = db.session.execute(db.select(Teams).where(Teams.uid == row.team_id)).scalar()
+        if team_row == None:
+            return serialized_row
+        team = team_row.serialize()
+        serialized_row["team"] = team
+        return serialized_row
+    
+    result = [serialize(row) for row in players_rows]
+    
+    response_body['message'] = "List of players"
+    response_body['results'] = result
+    return response_body, 200
 
 
 # CRUD de Players
@@ -198,7 +308,7 @@ def players():
         response_body['message'] = "List of players"
         response_body['results'] = result
         return response_body, 200
-    
+
     if request.method == 'POST':
         data = request.json
         new_player = Players(
@@ -261,6 +371,7 @@ def fantasy_league(id):
         db.session.commit()
         response_body['message'] = f'Respuesta desde el {request.method} para el id: {id}'
         return response_body, 200
+    return row.serialize()
     
 
 @api.route('/fantatsy-league-teams', methods=['GET', 'POST'])
@@ -353,6 +464,13 @@ def fantasy_standing(id):
         return response_body, 200
 
 
+def generate_password_hash(password):
+    bytes = str(password).encode('utf-8')
+    salt = bcrypt.gensalt() 
+    hash = bcrypt.hashpw(bytes, salt)
+    return hash.decode("utf-8")
+
+
 @api.route('/users', methods=['GET', 'POST'])
 def users():
     response_body = {}
@@ -364,14 +482,16 @@ def users():
         return response_body, 200
     if request.method == 'POST':
         data = request.json
+        user_existing = db.session.execute(db.select(Users).where(Users.email == data.get("email"))).scalar()
+        if user_existing is not None: 
+            response_body["message"] = "Usuario ya existente"
+            return response_body, 403
         username = data.get('username', None),
         email = data.get('email', None),
         password = data.get('password', None)
         phone_number = data.get('phone_number', None)
-        bytes = str(password).encode('utf-8')
-        salt = bcrypt.gensalt() 
-        hash = bcrypt.hashpw(bytes, salt)
-        new_user = Users(username = username, email = email, password = hash.decode('utf-8'), phone_number = phone_number, is_active = True)
+        hash_password = generate_password_hash(password)
+        new_user = Users(username = username, email = email, password = hash_password, phone_number = phone_number, is_active = True)
         db.session.add(new_user)
         db.session.commit()
         response_body['message'] = 'Usuario creado correctamente'
@@ -393,7 +513,7 @@ def login():
     user_password_bytes = user_row.password.encode('utf-8')
     if bcrypt.checkpw(password=password_bytes, hashed_password=user_password_bytes) == True:
         user_data = user_row.serialize()
-        access_token = create_access_token(identity=email, additional_claims={'user_id': user_data["id"], 'is_active': user_data['is_active']})
+        access_token = create_access_token(identity=str(user_data["id"]), additional_claims={'user_id': user_data["id"], 'is_active': user_data['is_active']})
         response_body['message'] = 'Usuario correcto'
         response_body['access_token'] = access_token
         response_body['results'] = user_data
@@ -482,7 +602,7 @@ def fantasy_coach(id):
         db.session.commit()
         response_body['message'] = f'Respuesta desde {request.method}'
         return response_body, 200
-    
+
 
 # CRUD de Fantasy Team
 @api.route('/fantasy-teams', methods=['GET', 'POST'])
@@ -542,6 +662,27 @@ def fantasy_team(id):
         return response_body, 200
  
 
+@api.route('/fantasy-teams/<int:id>/fantasy-players', methods=['GET'])
+def fantasy_players_by_team(id):
+    response_body = {}
+    fantasy_team = db.session.get(FantasyTeams, id)
+    if not fantasy_team:
+        response_body['message'] = "Fantasy team not found"
+        return response_body, 404
+    
+    rows = db.session.execute(db.select(FantasyPlayers).where(FantasyPlayers.fantasy_team_id == id)).scalars()
+    data = []
+    for row in rows:
+        item = row.serialize()
+        player = db.session.execute(db.select(Players).where(Players.uid == item['player_id'])).scalar().serialize()
+        item['name'] = player['name']
+        item['photo'] = player['photo']
+        data.append(item)
+    response_body['message'] = f'Respuesta desde {request.method}'
+    response_body['results'] = data
+    return response_body, 200
+
+
 # CRUD de Fantasy Player
 @api.route('/fantasy-players', methods=['GET', 'POST'])
 def fantasy_players():
@@ -558,11 +699,9 @@ def fantasy_players():
         new_player = FantasyPlayers(
             player_id = data.get('player_id'),
             fantasy_team_id = data.get('fantasy_team_id'),
-            position = 0,
+            position = data.get('position'),
             points = 0,
-            market_value = 0,
-            clause_value = 0,
-            is_scoutable = True)
+            clause_value = data.get('clause_value'))
         db.session.add(new_player)
         db.session.commit()
         response_body['message'] = f'Respuesta desde {request.method}'
@@ -573,7 +712,7 @@ def fantasy_players():
 @api.route('/fantasy-players/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 def fantasy_player(id):
     response_body = {}
-    fantasy_player = db.session.get(FantasyPlayers, id)
+    fantasy_player = db.session.execute(db.select(FantasyPlayers).where(FantasyPlayers.player_id == id)).scalar()
     if not fantasy_player:
         response_body['message'] = "Fantasy player not found"
         return response_body, 404
@@ -602,3 +741,220 @@ def fantasy_player(id):
         db.session.commit()
         response_body['message'] = f'Respuesta desde {request.method}'
         return response_body, 200
+
+
+@api.route('/fantasy-players/<int:id>/fantasy-teams', methods=['GET'])
+def fantasy_team_by_player(id):
+    response_body = {}
+    fantasy_player_data = fantasy_player(id)
+    if(fantasy_player_data[1] != 200):
+        return response_body, 404
+    fantasy_player_data = fantasy_player_data[0]['results']
+    fantasy_team_data = db.session.execute(db.select(FantasyTeams).where(FantasyTeams.id == fantasy_player_data['fantasy_team_id'])).scalar()
+    fantasy_player_data['fantasy_team'] = fantasy_team_data.serialize()
+    response_body['results'] = fantasy_player_data
+    return response_body, 200
+
+
+@api.route('/remove-bg', methods=['POST'])
+def remove_bg():
+    response_body = {}
+    data = request.json
+    req = urllib.request.urlopen(data.get("image_url"))
+    arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
+    img = cv2.imdecode(arr, -1)
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    Z = img.reshape((-1, 3))
+    Z = np.float32(Z)
+
+    K = 3
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    _, labels, centers = cv2.kmeans(Z, K, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+
+    centers = np.uint8(centers)
+    dominant_colors = centers[np.argmax(np.bincount(labels.flatten()))]
+
+    dominant_hsv = cv2.cvtColor(np.uint8([[dominant_colors]]), cv2.COLOR_BGR2HSV)[0][0]
+
+    lower_white = np.array([0, 0, dominant_hsv[2] - 5], dtype=np.uint8)
+    upper_white = np.array([255, 5, 255], dtype=np.uint8)
+
+    mask = cv2.inRange(hsv, lower_white, upper_white)
+
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for cnt in contours:
+        if cv2.contourArea(cnt) < 2000:
+            cv2.drawContours(mask, [cnt], -1, 0, -1)
+
+    kernel = np.ones((3, 3), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
+    img[:, :, 3] = 255 - mask
+
+    _, buffer = cv2.imencode(".png", img)
+    response_body['results'] = base64.b64encode(buffer).decode("utf-8")
+    return response_body, 200
+
+
+#CRUD Actualizar Datos Usuario
+@api.route('/update-user', methods=['PUT'])
+@jwt_required()
+def update_user():
+    response_body = {}
+    user_id = get_jwt_identity()
+    data = request.json
+    user = db.session.execute(db.select(Users).where(Users.id == user_id)).scalar()
+    if not user:
+        response_body["message"] = "Usuario no encontrado"
+        return response_body, 404
+    
+    user.username = data.get("username", user.username)
+    user.email = data.get("email", user.email)
+    user.phone_number = data.get("phone_number", user.phone_number)
+
+    db.session.commit()
+
+    response_body["message"] = "Datos actualizados correctamente",
+    response_body["results"] = user.serialize()
+    return response_body, 200
+
+
+# CRUD Eliminar Usuario
+@api.route('/delete-user', methods=['DELETE'])
+@jwt_required()
+def delete_user():
+    response_body = {}
+    user_id = get_jwt_identity()
+    
+    user = db.session.get(Users, user_id)
+    if not user:
+        response_body["message"] = "Usuario no encontrado"
+        return response_body, 404
+
+    db.session.delete(user)
+    db.session.commit()
+
+    response_body["message"] = "Cuenta eliminada correctamente"
+    return response_body, 200
+
+
+# CRUD Cambiar Contraseña
+@api.route('/reset-password', methods=['PUT'])
+@jwt_required()
+def reset_password():
+    response_body = {}
+    user_id = get_jwt_identity()
+    data = request.json
+    new_password = data.get("password")
+
+    user = db.session.get(Users, user_id) 
+    if not user:
+        response_body["message"] = "Usuario no encontrado"
+        return response_body, 404
+    
+    user.password = generate_password_hash(new_password)
+
+    db.session.commit()
+
+    response_body["message"] = "Contraseña actualizada correctamente"
+    return response_body, 200
+
+
+@api.route('/users/<int:id>/fantasy-teams', methods=['GET'])
+def fantasy_team_by_user(id):
+    response_body = {}
+    row = db.session.execute(db.select(FantasyTeams).where(FantasyTeams.user_id == id)).scalar()
+    if not row:
+        response_body['message'] = "Fantasy team not found"
+        return response_body, 404
+
+    if request.method == 'GET':
+        response_body['message'] = f'Respuesta desde {request.method}'
+        response_body['results'] = row.serialize()
+        return response_body, 200
+    return row.serialize()
+
+
+@api.route('/users/<int:id>/join-league/<int:league_id>', methods=['POST'])
+def join_league(id, league_id):
+    response_body = {}
+    fantasy_team_row = fantasy_team_by_user(id)
+    fantasy_league_row = fantasy_league(league_id)
+    print(fantasy_team_row)
+    new_team_of_league = FantasyLeagueTeams(
+        fantasy_league_id=int(fantasy_league_row['id']),
+        fantasy_team_id=int(fantasy_team_row['id'])
+    )
+    db.session.add(new_team_of_league)
+    db.session.commit()
+
+    response_body['message'] = f'Respuesta desde {request.method}'
+    response_body['results'] = new_team_of_league.serialize()
+    return response_body, 201
+
+
+@api.route('/standings', methods=['GET', 'POST'])
+def standings():
+    response_body = {}
+    today = datetime.now()
+    league_day = datetime(today.year - 1, today.month, today.day)
+    rows_matches = db.session.execute(db.select(Matches).where(Matches.date <= league_day).order_by(Matches.date)).scalars()
+    matches_today = [match_today.serialize() for match_today in rows_matches]
+    if request.method == 'GET':
+        teams_data = [row.serialize() for row in db.session.execute(db.select(Standings)).scalars()]
+        for match in matches_today:
+            home_team = next(team_data for team_data in teams_data if team_data['team_id'] == match['home_team_id'])
+            away_team = next(team_data for team_data in teams_data if team_data['team_id'] == match['away_team_id'])
+            home_team['goals_for'] += match['home_goals']
+            home_team['goals_against'] += match['away_goals']
+            away_team['goals_for'] += match['away_goals']
+            away_team['goals_against'] += match['home_goals']
+            if match['home_goals'] > match['away_goals']:
+                home_team['points'] += 3
+                home_team['games_won'] += 1
+                home_team['form'] += "V"
+                away_team['games_lost'] += 1
+                away_team['form'] += "D"
+            elif match['home_goals'] == match['away_goals']:
+                home_team['points'] += 1
+                home_team['form'] += "E"
+                home_team['games_draw'] += 1
+                away_team['points'] += 1
+                away_team['form'] += "E"
+                away_team['games_draw'] += 1
+            else:
+                away_team['points'] += 3
+                away_team['form'] += "V"
+                away_team['games_won'] += 1
+                home_team['form'] += "D"
+                home_team['games_lost'] += 1
+            
+            if len(home_team['form']) > 5:
+                home_team['form'] = home_team['form'][:5]
+            if len(away_team['form']) > 5:
+                away_team['form'] = away_team['form'][:5]
+        response_body['message'] = f'Partidos hasta {league_day}'
+        response_body['results'] = sorted(teams_data, key=lambda d: d['points'], reverse=True)
+        return response_body, 200
+    if request.method == 'POST':
+        teams_data = [row.serialize() for row in db.session.execute(db.select(Teams)).scalars()]
+        for team_data in teams_data:
+            new_standing = Standings(
+                team_id = team_data['uid'],
+                points = 0,
+                games_won = 0,
+                games_draw = 0,
+                games_lost = 0,
+                goals_for = 0,
+                goals_against = 0,
+                form = ''
+            )
+            db.session.add(new_standing)
+        db.session.commit()
+        standings_data = [row.serialize() for row in db.session.execute(db.select(Standings)).scalars()]
+        response_body['message'] = 'Standings inicializados correctamente'
+        response_body['results'] = standings_data
+        return response_body, 201
