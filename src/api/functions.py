@@ -246,27 +246,10 @@ def get_coach_by_id(id) -> Coaches:
 """
     ======================================================
     ======================================================
-    ================ Funciones market ====================
+    ================ Funciones players ===================
     ======================================================
     ======================================================
 """
-# TODO: Esta función va mal a veces
-def get_players_market(page, limit):
-    players_rows = db.session.execute(db.select(Players).limit(limit).offset(int(page)*int(limit))).scalars()
-
-    def serialize(row):
-        serialized_row = row.serialize()
-        team_row = db.session.execute(db.select(Teams).where(Teams.uid == row.team_id)).scalar()
-        if team_row == None:
-            return serialized_row
-        team = team_row.serialize()
-        serialized_row["team"] = team
-        return serialized_row
-    
-    result = [serialize(row) for row in players_rows]
-    return result
-
-
 def get_players():
     rows = db.session.execute(db.select(Players)).scalars()
     result = [row.serialize() for row in rows]
@@ -288,6 +271,37 @@ def add_player(name, first_name, last_name, number, nationality, position, photo
     return new_player
 
 
+"""
+    ======================================================
+    ======================================================
+    ================ Funciones market ====================
+    ======================================================
+    ======================================================
+"""
+# TODO: Esta función va mal a veces
+def get_players_market(page, limit):
+    players_rows = db.session.execute(db.select(Players).limit(limit).offset(int(page)*int(limit))).scalars()
+
+    def serialize(row):
+        serialized_row = row.serialize()
+        team_row = db.session.execute(db.select(Teams).where(Teams.uid == row.team_id)).scalar()
+        if team_row == None:
+            return serialized_row
+        team = team_row.serialize()
+        serialized_row["team"] = team
+        return serialized_row
+    
+    result = [serialize(row) for row in players_rows]
+    return result
+
+
+"""
+    ======================================================
+    ======================================================
+    ============ Funciones fantasy leagues ===============
+    ======================================================
+    ======================================================
+"""
 def get_fantasy_leagues():
     rows = db.session.execute(db.select(FantasyLeagues)).scalars()
     result = [ row.serialize() for row in rows]
@@ -313,6 +327,13 @@ def update_fantasy_league(fantasy_league: FantasyLeagues, name: str, photo: str)
     return fantasy_league
 
 
+"""
+    ======================================================
+    ======================================================
+    ========= Funciones fantasy league teams =============
+    ======================================================
+    ======================================================
+"""
 def get_fantasy_league_teams():
     rows = db.session.execute(db.select(FantasyLeagueTeams)).scalars()
     result = [ row.serialize() for row in rows]
@@ -338,6 +359,13 @@ def update_fantasy_league_team(fantasy_league_team: FantasyLeagueTeams, fantasy_
     return fantasy_league_team
 
 
+"""
+    ======================================================
+    ======================================================
+    ========== Funciones fantasy standings ===============
+    ======================================================
+    ======================================================
+"""
 #TODO: Calcular standings
 def get_fantasy_standings():
     rows = db.session.execute(db.select(FantasyStandings)).scalars()
@@ -362,6 +390,13 @@ def update_fantasy_standing(fantasy_standing: FantasyStandings, fantasy_team_id)
     return fantasy_standing
 
 
+"""
+    ======================================================
+    ======================================================
+    ============ Funciones fantasy coaches ===============
+    ======================================================
+    ======================================================
+"""
 def get_fantasy_coaches():
     rows = db.session.execute(db.select(FantasyCoaches)).scalars()
     result = [row.serialize() for row in rows]
@@ -393,6 +428,13 @@ def update_fantasy_coach(fantasy_coach: FantasyCoaches, fantasy_team_id, points,
     return fantasy_coach
 
 
+"""
+    ======================================================
+    ======================================================
+    ============= Funciones fantasy teams ================
+    ======================================================
+    ======================================================
+""" 
 def get_fantasy_teams():
     rows = db.session.execute(db.select(FantasyTeams)).scalars()
     result = [row.serialize() for row in rows]
@@ -424,6 +466,13 @@ def update_fantasy_team(fantasy_team: FantasyTeams, name, logo, formation, point
     return fantasy_team
 
 
+"""
+    ======================================================
+    ======================================================
+    ============ Funciones fantasy players ===============
+    ======================================================
+    ======================================================
+"""
 def get_fantasy_players_by_team(id):
     rows = db.session.execute(db.select(FantasyPlayers).where(FantasyPlayers.fantasy_team_id == id)).scalars()
     data = []

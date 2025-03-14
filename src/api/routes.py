@@ -545,6 +545,19 @@ def players_market():
     return response_body, 200
 
 
+"""
+    CRUD /fantasy-leagues
+    
+    GET /: Obtiene todos los jugadores que están en una liga fantasy
+    POST /: Crea una liga fantasy
+        Ejemplo de body: {"name": "Test Liga",
+                          "photo": "https://media.api-sports.io/football/leagues/1.png"}
+    GET /<id>: Obtiene los datos de una liga fantasy mediante su ID
+    PUT /<id>: Actualiza los datos de una liga
+        Ejemplo de body: {"name": "Other Liga",
+                          "photo": "https://media.api-sports.io/football/leagues/2.png"}
+    DELETE /<id>: Elimina una liga fantasy (hard delete)
+"""
 @api.route('/fantasy-leagues', methods=['GET', 'POST'])
 def fantasy_leagues():
     response_body = {}
@@ -587,7 +600,25 @@ def fantasy_league(id):
     return row.serialize()
 
 
-# CRUD de Fantasy Team
+"""
+    CRUD /fantasy-teams
+    
+    GET /: Obtiene todos los equipos que están en una liga fantasy
+    POST /: Crea un equipo fantasy
+        Ejemplo de body: {"user_id": 1
+                          "name": "Other FC",
+                          "logo": "https://media.api-sports.io/football/teams/1.png"}
+    GET /<id>: Obtiene los datos de un equipo fantasy mediante su ID
+    PUT /<id>: Actualiza los datos de un equipo
+        Ejemplo de body: {"user_id": 1
+                          "name": "Other FC",
+                          "logo": "https://media.api-sports.io/football/teams/2.png",
+                          "formation": "3-4-3",
+                          "points": 0}
+    DELETE /<id>: Elimina un equipo fantasy (hard delete)
+
+    GET /<id>/fantasy-players: Obtiene todos los jugadores que están en un equipo fantasy
+"""
 @api.route('/fantasy-teams', methods=['GET', 'POST'])
 def fantasy_teams():
     response_body = {}
@@ -654,6 +685,19 @@ def fantasy_players_by_team(id):
     return response_body, 200
 
 
+"""
+    CRUD /fantasy-league-teams
+    
+    GET /: Obtiene todas las relaciones entre equipos fantasy y ligas fantasy
+    POST /: Añade un equipo fantasy a una liga fantasy
+        Ejemplo de body: {"fantasy_team_id": 1
+                          "fantasy_league_id": 1}
+    GET /<id> (en desuso): Obtiene la relación entre un equipo fantasy y una liga fantasy mediante su ID
+    PUT /<id> (en desuso): Actualiza la relación entre un equipo fantasy y una liga fantasy
+        Ejemplo de body: {"fantasy_team_id": 2
+                          "fantasy_league_id": 2}
+    DELETE /<id>: Elimina un equipo fantasy de una liga fantasy (hard delete)
+"""
 @api.route('/fantasy-league-teams', methods=['GET', 'POST'])
 def fantasy_league_teams():
     response_body = {}
@@ -695,7 +739,24 @@ def fantasy_league_team(id):
         return response_body, 200
 
 
-# CRUD de Fantasy Player
+"""
+    CRUD /fantasy-players
+    
+    GET /: Obtiene todos los jugadores fantasy
+    POST /: Añade un equipo fantasy a una liga fantasy
+        Ejemplo de body: {"player_id": 1,
+                          "fantasy_team_id": 1,
+                          "position": "Goalkeeper",
+                          "clause_value": 123456789}
+    GET /<id>: Obtiene un jugador fantasy mediante su ID
+    PUT /<id>: Actualiza un jugador fantasy
+        Ejemplo de body: {"fantasy_team_id": 2,
+                          "position": "Defender",
+                          "clause_value": 987654321}
+    DELETE /<id>: Elimina un jugador fantasy (hard delete)
+
+    GET /<id>/fantasy-teams: Obtiene un jugador fantasy con los datos del equipo fantasy al que pertenece
+"""
 @api.route('/fantasy-players', methods=['GET', 'POST'])
 def fantasy_players():
     response_body = {}
@@ -749,7 +810,7 @@ def fantasy_player(id):
 
 
 @api.route('/fantasy-players/<int:id>/fantasy-teams', methods=['GET'])
-def fantasy_team_by_player(id):
+def fantasy_player_with_team_data(id):
     response_body = {}
     fantasy_player = get_fantasy_player_with_team_data(id)
     if fantasy_player is None:
@@ -758,6 +819,19 @@ def fantasy_team_by_player(id):
     return response_body, 200
 
 
+"""
+    CRUD /fantasy-standings
+    
+    GET /: Obtiene todos los standings de todas las ligas fantasy
+    POST /: Añade un fantasy standing
+        Ejemplo de body: {"fantasy_team_id": 1}
+    GET /<id> (TODO: obtener mediante fantasy_team_id): Obtiene un fantasy standing mediante su ID
+    PUT /<id> (TODO: calcular fantasy standing): Actualiza un jugador fantasy
+        Ejemplo de body: {"fantasy_team_id": 2}
+    DELETE /<id>: Elimina un jugador fantasy (hard delete)
+
+    GET /<id>/fantasy-teams: Obtiene un jugador fantasy con los datos del equipo fantasy al que pertenece
+"""
 @api.route('/fantatsy-standings', methods=['GET', 'POST'])
 def fantasy_standings():
     response_body = {}
@@ -798,7 +872,21 @@ def fantasy_standing(id):
         return response_body, 200
 
 
-# CRUD de Fantasy Coach
+"""
+    CRUD /fantasy-coaches
+    
+    GET /: Obtiene todos los fantasy coaches
+    POST /: Añade un fantasy coach
+        Ejemplo de body: {"coach_id": 1,
+                          "fantasy_team_id": 1}
+    GET /<id>: Obtiene un fantasy coach mediante su ID
+    PUT /<id>: Actualiza un fantasy coach
+        Ejemplo de body: {"fantasy_team_id": 2,
+                          "points": 1,
+                          "market_value": 123456789,
+                          "clause_value": 987654321}
+    DELETE /<id>: Elimina un fantasy coach (hard delete)
+"""
 @api.route('/fantasy-coaches', methods=['GET', 'POST'])
 def fantasy_coaches():
     response_body = {}
