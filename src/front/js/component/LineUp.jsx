@@ -9,12 +9,14 @@ export const LineUp = (props) => {
         const players = []
 
         const playersOfPosition = props.data.players.filter(player => player.position === position)
-        if (playersOfPosition) {
-            for (const player of playersOfPosition) {
-                const playerAlreadyAdded = players.find((playerAlready) => playerAlready.uid === player.uid)
-                if (!playerAlreadyAdded) {
-                    players.push(<Player player={player} key={player?.uid} />)
-                }
+        
+        const existingPlayers = []
+        for (const player of playersOfPosition) {
+            const playerAlreadyAdded = existingPlayers.find((playerAlready) => playerAlready.player_id === player.player_id)
+            
+            if (!playerAlreadyAdded) {
+                existingPlayers.push(player)
+                players.push(<Player player={player} key={player?.player_id} />)
             }
         }
         if(players.length < count) {
