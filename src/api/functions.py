@@ -289,8 +289,10 @@ def get_players_market(page, limit):
             return serialized_row
         team = team_row.serialize()
         serialized_row["team"] = team
+        fantasy_player = get_fantasy_player_with_team_data(row.uid)
+        serialized_row['fantasy_team'] = fantasy_player['fantasy_team'] if fantasy_player is not None else None
         return serialized_row
-    
+
     result = [serialize(row) for row in players_rows]
     return result
 
@@ -507,6 +509,10 @@ def get_fantasy_player_by_id(id) -> FantasyPlayers:
     return db.session.get(FantasyPlayers, id)
 
 
+def get_fantasy_player_by_player_id(id) -> FantasyPlayers:
+    return db.session.execute(db.select(FantasyPlayers).where(FantasyPlayers.player_id == id)).scalar()
+
+
 def update_fantasy_player(fantasy_player: FantasyPlayers, fantasy_team_id, points, clause_value, is_scoutable):
     fantasy_player.fantasy_team_id = fantasy_team_id
     fantasy_player.points = points
@@ -517,7 +523,7 @@ def update_fantasy_player(fantasy_player: FantasyPlayers, fantasy_team_id, point
 
 
 def get_fantasy_player_with_team_data(id):
-    fantasy_player = get_fantasy_player_by_id(id=id)
+    fantasy_player = get_fantasy_player_by_player_id(id=id)
     if fantasy_player is None:
         return None
     fantasy_team_data = get_fantasy_team_by_id(id=fantasy_player.fantasy_team_id)

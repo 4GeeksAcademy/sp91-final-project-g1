@@ -126,7 +126,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 			},
 			logout: async () => {
 				localStorage.clear()
-				setStore({ user: null })
+				setStore({ user: null, fantasyTeam: null })
 			},
 			removeBgFromImage: async (imageUrl) => {
 				const url = `${process.env.BACKEND_URL}/api/remove-bg`
@@ -158,6 +158,13 @@ const getState = ({ getStore, getActions, setStore }) => {
 						return undefined
 					}
 					const data = await response.json()
+					if (data.count) {
+						return {
+							results: data.results,
+							count: data.count,
+							total: data.total
+						}
+					}
 					return data.results
 				},
 				post: async (endpoint, body) => {
@@ -244,8 +251,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 					console.error("Error: ", response.status, response.statusText);
 					return;
 				}
-				localStorage.removeItem("accessToken");
-				setStore({ user: null });
+				getActions().logout()
 			},
 			resetPassword: async (dataToSend) => {
 				const uri = `${process.env.BACKEND_URL}/api/users/reset-password`;

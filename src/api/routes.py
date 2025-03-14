@@ -497,7 +497,7 @@ def coach(id):
     CRUD /players
     
     GET /: Obtiene todos los jugadores
-    POST /: Crea un entrenador
+    POST /: Crea un jugador
         Ejemplo de body: {"id": 1,
                           "name": "T. Coach",
                           "first_name": "Test",
@@ -535,13 +535,16 @@ def players():
 
 @api.route('/players-market', methods=['GET'])
 def players_market():
-    limit = request.args.get("limit")
-    page = request.args.get("page")
+    limit = request.args.get("limit", "15")
+    page = request.args.get("page", "0")
     response_body = {}
     result = get_players_market(page=page, limit=limit)
+    total_players = get_players()
     
     response_body['message'] = "List of players"
     response_body['results'] = result
+    response_body['count'] = int(page)*int(limit) + len(result)
+    response_body['total'] = len(total_players)
     return response_body, 200
 
 
