@@ -418,30 +418,29 @@ def standings():
     today = datetime.now()
     league_day = datetime(today.year - 1, today.month, today.day)
     if request.method == 'GET':
-        teams_data = calculate_standings(league_day)
+        teams_data = get_standings()
         response_body['message'] = f'Partidos hasta {league_day}'
         response_body['results'] = sorted(teams_data, key=lambda d: d['points'], reverse=True)
         return response_body, 200
     if request.method == 'POST':
         teams_data = get_standings()
-        if len(teams_data) == 0:
-            teams_data = initialize_standings()
+        teams_data = initialize_standings(create_new=len(teams_data) == 0)
         teams_data = calculate_standings(league_day)
         data = []
         for team_data in teams_data:
-            new_standing = add_standing(
-                team_id = team_data.team_id,
-                points = team_data.points,
-                games_won = team_data.games_won,
-                games_draw = team_data.games_draw,
-                games_lost = team_data.games_lost,
-                goals_for = team_data.goals_for,
-                goals_against = team_data.goals_against,
-                form = team_data.form)
-            data.append(new_standing)
+            standing = update_standing(
+                team_id = team_data['team_id'],
+                points = team_data['points'],
+                games_won = team_data['games_won'],
+                games_draw = team_data['games_draw'],
+                games_lost = team_data['games_lost'],
+                goals_for = team_data['goals_for'],
+                goals_against = team_data['goals_against'],
+                form = team_data['form'])
+            data.append(standing)
         standings_data = get_standings()
         response_body['message'] = 'Standings inicializados correctamente'
-        response_body['results'] = standings_data
+        response_body['results'] = sorted(standings_data, key=lambda d: d['points'], reverse=True)
         return response_body, 201
 
 
