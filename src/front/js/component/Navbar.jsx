@@ -11,9 +11,9 @@ export const Navbar = () => {
 	return (
 		<nav className="navbar bg-body-tertiary">
 			<div className="container-fluid d-flex align-items-center">
-				<a className="navbar-brand me-auto ms-5" href="#">
+				<Link to={'/'} className="navbar-brand me-auto ms-5">
 					<img src={logo} alt="Logo" width="50" />
-				</a>
+				</Link>
 				<div className="d-flex justify-content-center flex-grow-1">
 					<ul className="navbar-nav d-flex flex-row gap-5">
 						<li className="nav-item">
