@@ -91,6 +91,7 @@ export const Settings = () => {
         <div className="container-fluid text-center mt-4">
             <Alert
                 showAlert={showAlert}
+                setShowAlert={setShowAlert}
                 alertData={alertData}
             />
             <div className="d-flex align-items-center justify-content-between mx-2">
