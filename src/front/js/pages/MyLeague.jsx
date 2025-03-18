@@ -14,18 +14,13 @@ export const MyLeague = () => {
     const [teamName, setTeamName] = useState("");
     const [logo, setLogo] = useState("");
     const { actions } = useContext(Context)
-    const [standings, setStandings] = useState([]);  
+    const [standings, setStandings] = useState([]);
     const user = useProtectedPage();
 
     useEffect(() => {
         const fetchData = async () => {
             if (user?.id) {
                 const fetchedTeamData = await actions.getUserTeam(user.id);
-                if (fetchedTeamData) {
-                    setData(fetchedTeamData.players);
-                } else {
-                    setData([]);
-                }
                 if (fetchedTeamData.id) {
                     const fetchedStandings = await actions.getFantasyStandings(fetchedTeamData.id);
                     setStandings(fetchedStandings);
@@ -34,7 +29,7 @@ export const MyLeague = () => {
         };
         fetchData();
     }, [user]);
-    
+
     const handleClose = () => setShowModal(false);
     const onAccept = async () => {
         const newTeam = {
@@ -44,10 +39,9 @@ export const MyLeague = () => {
             logo: logo,
         };
         await actions.addTeam(newTeam);
-        setData([...data, newTeam]);
         setLeagueId("");
-        setTeamName("");  
-        setLogo(""); 
+        setTeamName("");
+        setLogo("");
         setShowModal(false);
         setAlertData({
             variant: 'success',
@@ -59,6 +53,7 @@ export const MyLeague = () => {
     const headers = [
         { label: "#", style: { width: '20px' } },
         { label: "Club", style: { width: '200px' } },
+        { label: 'Puntos', style: { width: '200px' } }
     ];
 
     const handleAddteam = () => {
@@ -81,7 +76,7 @@ export const MyLeague = () => {
             <div className="container">
                 {standings.length > 0 ? (
                     <Table headers={headers}>
-                        <TableStandings data={standings} /> {/* Pasa los standings a la tabla */}
+                        <TableStandings data={standings} />
                     </Table>
                 ) : (
                     <div className="d-flex flex-column align-items-center justify-content-center mt-5 gap-3">

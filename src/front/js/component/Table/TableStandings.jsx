@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
+import defaultFantasyLogo from '../../../img/team-placeholder.png'
 
 export const TableStandings = (props) => {
 
@@ -17,7 +18,7 @@ export const TableStandings = (props) => {
                 break;
         }
     }
-    console.log(props)
+
     return props.data.map((item, index) => {
         return (
             <tr key={index}>
@@ -27,7 +28,7 @@ export const TableStandings = (props) => {
                         return (
                             <td key={`item-${index}`}>
                                 <div className="d-flex gap-2 align-items-center">
-                                    <img src={itemData.logo} alt={`${itemData.name}'s logo`} width={20} height={20} />
+                                    <img src={itemData.logo || defaultFantasyLogo} alt={`${itemData.name}'s logo`} width={20} height={20} />
                                     <span>{itemData.name}</span>
                                 </div>
                             </td>

@@ -838,9 +838,14 @@ def fantasy_player_with_team_data(id):
 def fantasy_standings():
     response_body = {}
     if request.method == 'GET':
-        result = get_fantasy_standings()
+        fantasy_standings = get_fantasy_standings()
+
+        result = []
+        for fantasy_standing in fantasy_standings:
+            team_data = get_fantasy_team_by_id(fantasy_standing['fantasy_team_id'])
+            result.append(team_data.serialize())
         response_body['message'] = f'List of fantasy standings'
-        response_body['results'] = result
+        response_body['results'] = sorted(result, key=lambda d: d['points'], reverse=True)
         return response_body, 200
     if request.method == 'POST':
         data = request.json
