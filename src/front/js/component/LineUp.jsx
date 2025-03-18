@@ -14,7 +14,7 @@ export const LineUp = (props) => {
         for (const player of playersOfPosition) {
             const playerAlreadyAdded = existingPlayers.find((playerAlready) => playerAlready.player_id === player.player_id)
 
-            if (!playerAlreadyAdded) {
+            if (!playerAlreadyAdded && !player.isInBench) {
                 existingPlayers.push(player)
                 players.push(<Player player={player} key={player?.player_id} />)
             }
