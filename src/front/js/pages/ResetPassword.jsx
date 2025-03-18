@@ -53,6 +53,7 @@ export const ResetPassword = (props) => {
         <div className={`d-flex flex-column justify-content-center my-auto sign-form ${!props.ResetPassword && 'active'}`}>
             <Alert
                 showAlert={showAlert}
+                setShowAlert={setShowAlert}
                 alertData={alertData}
             />
             <form action="submit" onSubmit={handleResetPassword} className={`col-12 col-md-6 col-lg-4 d-flex flex-column gap-2 mx-auto needs-validation`} noValidate>
