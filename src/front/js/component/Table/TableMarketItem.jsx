@@ -84,11 +84,11 @@ export const TableMarketItem = (props) => {
                                     <span>{props.team.name}</span>
                                 </div>
                                 <div className="d-flex gap-2 align-items-center">
-                                    {props.fantasyTeam
+                                    {props.fantasy_team
                                         ?
                                         <>
-                                            <img src={props.fantasyTeam.logo || teamPlaceholder} width={20} height={20} />
-                                            <span>{props.fantasyTeam.name}</span>
+                                            <img src={props.fantasy_team.logo || teamPlaceholder} width={20} height={20} />
+                                            <span>{props.fantasy_team.name}</span>
                                         </>
                                         :
                                         <>

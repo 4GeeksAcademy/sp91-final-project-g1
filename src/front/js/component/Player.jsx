@@ -11,8 +11,6 @@ export const Player = (props) => {
     const [processedImage, setProcessedImage] = useState(null);
     const { actions } = useContext(Context)
     const handleImageLoad = async () => {
-        console.log(player);
-
         const processed = await actions.removeBgFromImage(player.photo);
         if (processed !== "ERROR") {
             setProcessedImage(processed);

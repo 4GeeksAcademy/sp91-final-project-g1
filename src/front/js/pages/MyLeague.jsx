@@ -4,15 +4,17 @@ import { TableStandings } from "../component/Table/TableStandings.jsx";
 import { Context } from "../store/appContext.js";
 import { useProtectedPage } from "../hooks/useProtectedPage.js";
 import { Button, Modal } from "react-bootstrap";
+import { MyAlert } from "../component/Alert.jsx";
 
 export const MyLeague = () => {
     const [showModal, setShowModal] = useState(false);
-    const [leagueId, setLeagueId] = useState("");  
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertData, setAlertData] = useState({});
+    const [leagueId, setLeagueId] = useState("");
     const [teamName, setTeamName] = useState("");
     const [logo, setLogo] = useState("");
-    const [data, setData] = useState([]);  
+    const { actions } = useContext(Context)
     const [standings, setStandings] = useState([]);  
-    const { actions } = useContext(Context);
     const user = useProtectedPage();
 
     useEffect(() => {
@@ -36,10 +38,10 @@ export const MyLeague = () => {
     const handleClose = () => setShowModal(false);
     const onAccept = async () => {
         const newTeam = {
-            fantasy_league_id: leagueId,     
-            user_id: user?.id,    
+            fantasy_league_id: leagueId,
+            user_id: user?.id,
             name: teamName,
-            logo: logo,         
+            logo: logo,
         };
         await actions.addTeam(newTeam);
         setData([...data, newTeam]);
@@ -47,6 +49,11 @@ export const MyLeague = () => {
         setTeamName("");  
         setLogo(""); 
         setShowModal(false);
+        setAlertData({
+            variant: 'success',
+            body: 'Te has unido a la liga correctamente'
+        })
+        setShowAlert(true);
     }
 
     const headers = [
@@ -64,6 +71,9 @@ export const MyLeague = () => {
 
     return (
         <div className="container-fluid">
+            <div className="mt-2">
+                <MyAlert showAlert={showAlert} alertData={alertData} />
+            </div>
             <div className="d-flex gap-3 justify-content-center align-items-center">
                 <h1 className="text-center">Mi liga</h1>
                 <button className="btn btn-outline-primary" onClick={handleAddteam}>Añadir equipo</button>

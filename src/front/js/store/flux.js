@@ -6,8 +6,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 			fantasyTeam: null
 		},
 		actions: {
-		getFantasyStandings: async() =>{
-           const uri = `${process.env.BACKEND_URL}/api/fantasy-standings`
+		getFantasyStandings: async() => {
+       const uri = `${process.env.BACKEND_URL}/api/fantasy-standings`
 		   const response = await fetch(uri)
 		   if (response.ok) {
 			   const data = await response.json();
@@ -149,7 +149,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 					image_url: imageUrl
 				})
 			})
-
 			if (!response.ok) {
 				console.error("ERROR AL QUITAR BACKGROUND")
 				return "ERROR"
@@ -255,7 +254,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 				return;
 			}
 			localStorage.removeItem("accessToken");
-			setStore({ user: null });
+			setStore({ user: null, fantasyTeam: null });
+      getActions().logout()
 		},
 		resetPassword: async (dataToSend) => {
 			const uri = `${process.env.BACKEND_URL}/api/users/reset-password`;

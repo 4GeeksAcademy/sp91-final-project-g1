@@ -4,25 +4,26 @@ import { Pagination as BsPagination } from "react-bootstrap";
 
 export const Pagination = (props) => {
 
+    const generatePage = (page) => {
+        if (page > 0 && page * 15 < props.pagingData.total + 14) {
+            return <BsPagination.Item onClick={() => props.setPage(page)}>
+                {page}
+            </BsPagination.Item>
+        }
+    }
     return (
         <BsPagination>
             <BsPagination.Prev disabled={props.page === 1} onClick={() => props.setPage(props.page - 1)} />
 
+            {generatePage(props.page - 2)}
+            {generatePage(props.page - 1)}
             <BsPagination.Item key={props.page} active>
                 {props.page}
             </BsPagination.Item>
-            {!props.isMaxData &&
-                <>
-                    <BsPagination.Item key={props.page + 1} onClick={() => props.setPage(props.page + 1)}>
-                        {props.page + 1}
-                    </BsPagination.Item>
-                    <BsPagination.Item key={props.page + 2} onClick={() => props.setPage(props.page + 2)}>
-                        {props.page + 2}
-                    </BsPagination.Item>
-                </>
-            }
+            {generatePage(props.page + 1)}
+            {generatePage(props.page + 2)}
 
-            <BsPagination.Next onClick={() => props.setPage(props.page + 1)} disabled={props.isMaxData} />
+            <BsPagination.Next onClick={() => props.setPage(props.page + 1)} disabled={props.pagingData.count === props.pagingData.total} />
 
         </BsPagination>
     )
@@ -31,5 +32,5 @@ export const Pagination = (props) => {
 Pagination.propTypes = {
     page: PropTypes.number,
     setPage: PropTypes.func,
-    isMaxData: PropTypes.bool
+    pagingData: PropTypes.object
 }

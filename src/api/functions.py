@@ -156,11 +156,26 @@ def add_standing(team_id, points, games_won, games_draw, games_lost, goals_for, 
     return new_standing
 
 
-def initialize_standings():
-    teams_data = [row.serialize() for row in get_teams()]
+def update_standing(team_id, points, games_won, games_draw, games_lost, goals_for, goals_against, form):
+    standing = db.session.execute(db.select(Standings).where(Standings.team_id == team_id)).scalar()
+    standing.team_id = team_id
+    standing.points = points
+    standing.games_won = games_won
+    standing.games_draw = games_draw
+    standing.games_lost = games_lost
+    standing.goals_for = goals_for
+    standing.goals_against = goals_against
+    standing.form = form
+    db.session.commit()
+    return standing
+
+
+def initialize_standings(create_new=False):
+    teams_data = get_teams()
     data = []
     for team_data in teams_data:
-        new_standing = add_standing(
+        if create_new == True:
+            new_standing = add_standing(
             team_id = team_data['uid'],
             points = 0,
             games_won = 0,
@@ -168,13 +183,22 @@ def initialize_standings():
             games_lost = 0,
             goals_for = 0,
             goals_against = 0,
-            form = ''
-        )
+            form = '')
+        else:
+            new_standing = update_standing(
+                team_id = team_data['uid'],
+                points = 0,
+                games_won = 0,
+                games_draw = 0,
+                games_lost = 0,
+                goals_for = 0,
+                goals_against = 0,
+                form = '')
         data.append(new_standing)
     return data
 
 
-def calculate_standings(today) -> List[Standings]: 
+def calculate_standings(today): 
     rows_matches = db.session.execute(db.select(Matches).where(Matches.date <= today).order_by(Matches.date)).scalars()
     matches_today = [match_today.serialize() for match_today in rows_matches]
     teams_data = get_standings()
@@ -289,8 +313,10 @@ def get_players_market(page, limit):
             return serialized_row
         team = team_row.serialize()
         serialized_row["team"] = team
+        fantasy_player = get_fantasy_player_with_team_data(row.uid)
+        serialized_row['fantasy_team'] = fantasy_player['fantasy_team'] if fantasy_player is not None else None
         return serialized_row
-    
+
     result = [serialize(row) for row in players_rows]
     return result
 
@@ -507,6 +533,10 @@ def get_fantasy_player_by_id(id) -> FantasyPlayers:
     return db.session.get(FantasyPlayers, id)
 
 
+def get_fantasy_player_by_player_id(id) -> FantasyPlayers:
+    return db.session.execute(db.select(FantasyPlayers).where(FantasyPlayers.player_id == id)).scalar()
+
+
 def update_fantasy_player(fantasy_player: FantasyPlayers, fantasy_team_id, points, clause_value, is_scoutable):
     fantasy_player.fantasy_team_id = fantasy_team_id
     fantasy_player.points = points
@@ -517,7 +547,7 @@ def update_fantasy_player(fantasy_player: FantasyPlayers, fantasy_team_id, point
 
 
 def get_fantasy_player_with_team_data(id):
-    fantasy_player = get_fantasy_player_by_id(id=id)
+    fantasy_player = get_fantasy_player_by_player_id(id=id)
     if fantasy_player is None:
         return None
     fantasy_team_data = get_fantasy_team_by_id(id=fantasy_player.fantasy_team_id)

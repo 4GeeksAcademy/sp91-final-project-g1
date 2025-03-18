@@ -418,30 +418,29 @@ def standings():
     today = datetime.now()
     league_day = datetime(today.year - 1, today.month, today.day)
     if request.method == 'GET':
-        teams_data = calculate_standings(league_day)
+        teams_data = get_standings()
         response_body['message'] = f'Partidos hasta {league_day}'
         response_body['results'] = sorted(teams_data, key=lambda d: d['points'], reverse=True)
         return response_body, 200
     if request.method == 'POST':
         teams_data = get_standings()
-        if len(teams_data) == 0:
-            teams_data = initialize_standings()
+        teams_data = initialize_standings(create_new=len(teams_data) == 0)
         teams_data = calculate_standings(league_day)
         data = []
         for team_data in teams_data:
-            new_standing = add_standing(
-                team_id = team_data.team_id,
-                points = team_data.points,
-                games_won = team_data.games_won,
-                games_draw = team_data.games_draw,
-                games_lost = team_data.games_lost,
-                goals_for = team_data.goals_for,
-                goals_against = team_data.goals_against,
-                form = team_data.form)
-            data.append(new_standing)
+            standing = update_standing(
+                team_id = team_data['team_id'],
+                points = team_data['points'],
+                games_won = team_data['games_won'],
+                games_draw = team_data['games_draw'],
+                games_lost = team_data['games_lost'],
+                goals_for = team_data['goals_for'],
+                goals_against = team_data['goals_against'],
+                form = team_data['form'])
+            data.append(standing)
         standings_data = get_standings()
         response_body['message'] = 'Standings inicializados correctamente'
-        response_body['results'] = standings_data
+        response_body['results'] = sorted(standings_data, key=lambda d: d['points'], reverse=True)
         return response_body, 201
 
 
@@ -497,7 +496,7 @@ def coach(id):
     CRUD /players
     
     GET /: Obtiene todos los jugadores
-    POST /: Crea un entrenador
+    POST /: Crea un jugador
         Ejemplo de body: {"id": 1,
                           "name": "T. Coach",
                           "first_name": "Test",
@@ -535,13 +534,16 @@ def players():
 
 @api.route('/players-market', methods=['GET'])
 def players_market():
-    limit = request.args.get("limit")
-    page = request.args.get("page")
+    limit = request.args.get("limit", "15")
+    page = request.args.get("page", "0")
     response_body = {}
     result = get_players_market(page=page, limit=limit)
+    total_players = get_players()
     
     response_body['message'] = "List of players"
     response_body['results'] = result
+    response_body['count'] = int(page)*int(limit) + len(result)
+    response_body['total'] = len(total_players)
     return response_body, 200
 
 
