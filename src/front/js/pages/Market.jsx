@@ -20,7 +20,7 @@ export const Market = () => {
         setIsLoading(true)
         const playersData = await actions.api.get('players-market', `page=${page - 1}&limit=15`)
 
-        setData(playersData)
+        setData(playersData.results)
         setPagingData({
             total: playersData.total,
             count: playersData.count

@@ -12,6 +12,16 @@ export const MyTeam = () => {
 	const user = useProtectedPage();
 	const getUserTeam = async () => {
 		const userTeam = await actions.getUserTeam(user.id);
+		const [defendersCount, midFieldersCount, forwardsCount] = userTeam.formation.split('-')
+		const setBench = (position, count) => {
+			const players = userTeam.players.filter(element => element.position === position)
+			for (let i = 0; i < players.length; i++) {
+				players[i].isInBench = i + 1 > count
+			}
+		}
+		setBench('Defender', defendersCount)
+		setBench('Midfielder', midFieldersCount)
+		setBench('Attacker', forwardsCount)
 		setTeam(userTeam);
 	};
 
