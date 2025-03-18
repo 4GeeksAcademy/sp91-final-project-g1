@@ -17,7 +17,7 @@ export const TableStandings = (props) => {
                 break;
         }
     }
-
+    console.log(props)
     return props.data.map((item, index) => {
         return (
             <tr key={index}>

@@ -10,6 +10,7 @@ export const TableMarketItem = (props) => {
     const [isLoading, setIsLoading] = useState(true)
     const [modalData, setModalData] = useState({})
     const [showModal, setShowModal] = useState(false)
+    const [isFiching, setIsFiching] = useState(false);
 
     const getImageWithoutBg = async () => {
         const image = await actions.removeBgFromImage(props.photo)
@@ -30,11 +31,23 @@ export const TableMarketItem = (props) => {
                     clause_value: playerData.market_value,
                     fantasy_team_id: actions.getFromLocalStorage('fantasyTeam').id
                 }
-                await actions.api.post('fantasy-players', body)
-                setShowModal(false)
+                const response = await actions.api.post("fantasy-players", body);
+                if (response) {
+                    setShowModal(false);
+                    setIsFiching(false); 
+                    window.location.reload(); 
+                } else {
+                    setIsFiching(false);
+                }
             },
             acceptButtonType: 'primary',
-            acceptButtonLabel: 'Fichar jugador'
+            acceptButtonLabel: isFiching ? (
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            ) : (
+                "Fichar jugador"
+            ),
         }
         setModalData(data)
         setShowModal(true)
@@ -97,7 +110,14 @@ export const TableMarketItem = (props) => {
                                 <span>{props.market_value.toLocaleString()}</span>
                             </div>
                         </div>
-                        <button className="btn btn-primary mt-auto px-3" onClick={handleScoutPlayer}>Fichar</button>
+                        <button className="btn btn-primary mt-auto px-3" onClick={handleScoutPlayer}> 
+                        {isFiching ? (
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                        ) : (
+                            "Fichar jugador"
+                        )}</button>
                         <MyModal show={showModal} setShow={setShowModal} modalData={modalData} />
                     </div>
                 }

@@ -832,7 +832,7 @@ def fantasy_player_with_team_data(id):
 
     GET /<id>/fantasy-teams: Obtiene un jugador fantasy con los datos del equipo fantasy al que pertenece
 """
-@api.route('/fantatsy-standings', methods=['GET', 'POST'])
+@api.route('/fantasy-standings', methods=['GET', 'POST'])
 def fantasy_standings():
     response_body = {}
     if request.method == 'GET':

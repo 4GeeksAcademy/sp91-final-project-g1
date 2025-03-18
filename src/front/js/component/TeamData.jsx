@@ -2,6 +2,7 @@ import React from "react"
 import teamPlaceholder from '../../img/team-placeholder.png'
 
 export const TeamData = (props) => {
+    
     return (
         <div className="align-items-center d-flex flex-column justify-content-center">
             <img src={props.team.logo || teamPlaceholder} width={100} height={100} />
