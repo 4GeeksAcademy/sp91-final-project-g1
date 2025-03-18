@@ -290,18 +290,19 @@ const getState = ({ getStore, getActions, setStore }) => {
 			getStandings: async () => {
 				const standings = await getActions().api.get('standings').results
 				const teams = await getActions().api.get('teams').results
-				const data = []
-				for (const standing of standings) {
-					standing['team'] = teams.find((team) => team.uid === standing.team_id)
+
+				const data = standings.results.map((standing) => {
+
+					standing['team'] = teams.results.find((team) => team.uid === standing.team_id)
 					standing['games_played'] = standing['games_won'] + standing['games_draw'] + standing['games_lost']
 					standing['goals_diff'] = standing['goals_for'] - standing['goals_against']
 
 					const sortOrder = ['team', 'games_played', 'games_won', 'games_draw', 'games_lost', 'goals_for', 'goals_against', 'goals_diff', 'points', 'form']
 					const dataStanding = JSON.parse(JSON.stringify(standing, sortOrder, 4))
-					dataStanding['team'] = teams.find((team) => team.uid === standing.team_id)
-
-					data.push(dataStanding)
-				}
+					dataStanding['team'] = teams.results.find((team) => team.uid === standing.team_id)
+					
+					return dataStanding
+				})
 				return data
 			}
 		},
