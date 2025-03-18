@@ -13,7 +13,7 @@ export const LegendStandings = () => {
                     <i className="fa-solid fa-square text-warning pe-1"></i> Fase de grupos de Europa League
                 </div>
                 <div>
-                <i className="fa-solid fa-square text-success pe-1"></i>Clasificados de Conference League
+                    <i className="fa-solid fa-square text-success pe-1"></i>Clasificados de Conference League
                 </div>
                 <div>
                     <i className="fa-solid fa-square text-danger pe-1"></i> Descenso

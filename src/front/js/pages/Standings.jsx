@@ -7,17 +7,17 @@ import { Context } from "../store/appContext.js";
 export const Standings = () => {
 
     const headers = [
-        { label: "#", style: { width: '20px' } }, 
-        { label: "Club", style: { width: '200px' } }, 
-        { label: "PJ", style: { width: 'auto' } }, 
-        { label: "V", style: { width: 'auto' } }, 
-        { label: "E", style: { width: 'auto' } }, 
-        { label: "D", style: { width: 'auto' } }, 
-        { label: "GF", style: { width: 'auto' } }, 
-        { label: "GC", style: { width: 'auto' } }, 
-        { label: "DF", style: { width: 'auto' } }, 
-        { label: "Pts", style: { width: 'auto' } }, 
-        { label: "Últimos 5", style: { width: 'auto' } }, 
+        { label: "#", style: { width: '20px' } },
+        { label: "Club", style: { width: '200px' } },
+        { label: "PJ", style: { width: 'auto' } },
+        { label: "V", style: { width: 'auto' } },
+        { label: "E", style: { width: 'auto' } },
+        { label: "D", style: { width: 'auto' } },
+        { label: "GF", style: { width: 'auto' } },
+        { label: "GC", style: { width: 'auto' } },
+        { label: "DF", style: { width: 'auto' } },
+        { label: "Pts", style: { width: 'auto' } },
+        { label: "Últimos 5", style: { width: 'auto' } },
     ]
 
     const { actions } = useContext(Context)
@@ -43,4 +43,3 @@ export const Standings = () => {
         </div>
     )
 }
-

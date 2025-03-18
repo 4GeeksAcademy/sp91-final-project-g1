@@ -3,6 +3,7 @@ import React from "react";
 import { TableMarketItem } from "./TableMarketItem.jsx";
 
 export const TableMarket = (props) => {
+    
     return (
         <>
             {props.data?.map((item, index) => {

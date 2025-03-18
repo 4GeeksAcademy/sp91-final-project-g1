@@ -6,6 +6,27 @@ const getState = ({ getStore, getActions, setStore }) => {
 			fantasyTeam: null
 		},
 		actions: {
+			getFantasyStandings: async () => {
+				const uri = `${process.env.BACKEND_URL}/api/fantasy-standings`
+				const response = await fetch(uri)
+				if (response.ok) {
+					const data = await response.json();
+					let standings = data.results
+					standings = standings.map((standing) => {
+						return {
+							team: {
+								logo: standing.logo,
+								name: standing.name
+							},
+							points: standing.points
+						}
+					})
+
+					return standings;
+				} else {
+					return null;
+				}
+			},
 			getMessage: async () => {
 				const uri = `${process.env.BACKEND_URL}/api/hello`
 				const response = await fetch(uri)
@@ -47,7 +68,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 			},
 			addUser: async (dataToSend) => {
-				const uri = `${process.env.BACKEND_URL}/api/fantatsy-league-teams`
+				const uri = `${process.env.BACKEND_URL}/api/fantasy-league-teams`
 				const body = {
 					fantasy_team_id: dataToSend.fantasy_team_id,
 					fantasy_league_id: dataToSend.fantasy_league_id,
@@ -139,7 +160,6 @@ const getState = ({ getStore, getActions, setStore }) => {
 						image_url: imageUrl
 					})
 				})
-
 				if (!response.ok) {
 					console.error("ERROR AL QUITAR BACKGROUND")
 					return "ERROR"
@@ -158,7 +178,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 						return undefined
 					}
 					const data = await response.json()
-					return data.results
+					return data
 				},
 				post: async (endpoint, body) => {
 					const url = `${process.env.BACKEND_URL}/api/${endpoint}`
@@ -209,7 +229,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 				},
 			},
 			updateUser: async (dataToSend) => {
-				const uri = `${process.env.BACKEND_URL}/api/update-user`
+				const userData = getActions().getFromLocalStorage('user')
+				const uri = `${process.env.BACKEND_URL}/api/users/${userData.id}`
 				const options = {
 					method: 'PUT',
 					headers: {
@@ -229,7 +250,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 				return response;
 			},
 			deleteUser: async () => {
-				const uri = `${process.env.BACKEND_URL}/api/delete-user`
+				const userData = getActions().getFromLocalStorage('user')
+				const uri = `${process.env.BACKEND_URL}/api/users/${userData.id}`
 				const options = {
 					method: 'DELETE',
 					headers: {
@@ -243,10 +265,11 @@ const getState = ({ getStore, getActions, setStore }) => {
 					return;
 				}
 				localStorage.removeItem("accessToken");
-				setStore({ user: null });
+				setStore({ user: null, fantasyTeam: null });
+				getActions().logout()
 			},
 			resetPassword: async (dataToSend) => {
-				const uri = `${process.env.BACKEND_URL}/api/reset-password`;
+				const uri = `${process.env.BACKEND_URL}/api/users/reset-password`;
 				const options = {
 					method: 'PUT',
 					headers: {
@@ -265,8 +288,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 				return response;
 			},
 			getStandings: async () => {
-				const standings = await getActions().api.get('standings')
-				const teams = await getActions().api.get('teams')
+				const standings = await getActions().api.get('standings').results
+				const teams = await getActions().api.get('teams').results
 				const data = []
 				for (const standing of standings) {
 					standing['team'] = teams.find((team) => team.uid === standing.team_id)

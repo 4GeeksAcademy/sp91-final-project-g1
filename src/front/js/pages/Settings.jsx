@@ -13,17 +13,26 @@ export const Settings = () => {
     const [email, setEmail] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
 
-    const [modalData, setModalData] = useState({ title: "", body: "", onAccept: () => { }, acceptButtonLabel: "", acceptButtonType: "primary" })
+    const [modalData, setModalData] = useState({
+        title: "",
+        body: "",
+        onAccept: () => { },
+        acceptButtonLabel: "",
+        acceptButtonType: "primary"
+    })
     const [showModal, setShowModal] = useState(false);
 
-    const [alertData, setAlertData] = useState({ body: "", variant: "" })
+    const [alertData, setAlertData] = useState({
+        body: "",
+        variant: ""
+    })
     const [showAlert, setShowAlert] = useState(false);
-    
+
     const navigate = useNavigate()
     const handleShow = () => setShowModal(true);
     const user = useProtectedPage();
 
-    
+
     const handleShowSaveChanges = () => {
         const data = {
             title: "Guardar datos",
@@ -48,7 +57,7 @@ export const Settings = () => {
                 }
                 setShowAlert(true);
                 setShowModal(false);
-            }, 
+            },
             acceptButtonLabel: "Guardar cambios",
             acceptButtonType: "success"
         }
@@ -91,6 +100,7 @@ export const Settings = () => {
         <div className="container-fluid text-center mt-4">
             <Alert
                 showAlert={showAlert}
+                setShowAlert={setShowAlert}
                 alertData={alertData}
             />
             <div className="d-flex align-items-center justify-content-between mx-2">

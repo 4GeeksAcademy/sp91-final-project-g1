@@ -39,6 +39,7 @@ export const LoginForm = (props) => {
         <div className={`col-6 d-flex flex-column justify-content-center align-items-center sign-form h-100 ${props.isLoginActive && 'active'}`}>
             <Alert
                 showAlert={showAlert}
+                setShowAlert={setShowAlert}
                 alertData={alertData}
             />
             <form action="submit" onSubmit={handleLogin} className={`col-12 col-md-6 col-lg-4 d-flex flex-column gap-2 align-center needs-validation`} noValidate>
