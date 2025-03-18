@@ -288,8 +288,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 				return response;
 			},
 			getStandings: async () => {
-				const standings = await getActions().api.get('standings').results
-				const teams = await getActions().api.get('teams').results
+				const standings = await getActions().api.get('standings')
+				const teams = await getActions().api.get('teams')				
 
 				const data = standings.results.map((standing) => {
 
