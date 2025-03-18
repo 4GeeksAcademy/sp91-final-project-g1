@@ -15,7 +15,7 @@ class Users(db.Model):
 
     def __repr__(self):
         return f'<User {self.username} - {self.email}>'
-
+       
     def serialize(self):
         # do not serialize the password, its a security breach
         return {"id": self.id,

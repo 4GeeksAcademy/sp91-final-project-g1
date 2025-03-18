@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { Table } from "../component/Table/Table.jsx";
 import { TableStandings } from "../component/Table/TableStandings.jsx";
 import { Context } from "../store/appContext.js";
@@ -13,10 +13,28 @@ export const MyLeague = () => {
     const [leagueId, setLeagueId] = useState("");
     const [teamName, setTeamName] = useState("");
     const [logo, setLogo] = useState("");
-    const [data, setData] = useState([]);
     const { actions } = useContext(Context)
+    const [standings, setStandings] = useState([]);  
     const user = useProtectedPage();
 
+    useEffect(() => {
+        const fetchData = async () => {
+            if (user?.id) {
+                const fetchedTeamData = await actions.getUserTeam(user.id);
+                if (fetchedTeamData) {
+                    setData(fetchedTeamData.players);
+                } else {
+                    setData([]);
+                }
+                if (fetchedTeamData.id) {
+                    const fetchedStandings = await actions.getFantasyStandings(fetchedTeamData.id);
+                    setStandings(fetchedStandings);
+                }
+            }
+        };
+        fetchData();
+    }, [user]);
+    
     const handleClose = () => setShowModal(false);
     const onAccept = async () => {
         const newTeam = {
@@ -25,7 +43,11 @@ export const MyLeague = () => {
             name: teamName,
             logo: logo,
         };
-        await actions.addTeam(newTeam)
+        await actions.addTeam(newTeam);
+        setData([...data, newTeam]);
+        setLeagueId("");
+        setTeamName("");  
+        setLogo(""); 
         setShowModal(false);
         setAlertData({
             variant: 'success',
@@ -37,14 +59,12 @@ export const MyLeague = () => {
     const headers = [
         { label: "#", style: { width: '20px' } },
         { label: "Club", style: { width: '200px' } },
-        { label: "GF", style: { width: 'auto' } },
-        { label: "TA", style: { width: 'auto' } },
-        { label: "TR", style: { width: 'auto' } },
-        { label: "Puntos", style: { width: 'auto' } },
     ];
+
     const handleAddteam = () => {
         // TODO: Añadir funcionalidad
     }
+
     const handleJoinLeague = () => {
         setShowModal(true);
     };
@@ -59,25 +79,23 @@ export const MyLeague = () => {
                 <button className="btn btn-outline-primary" onClick={handleAddteam}>Añadir equipo</button>
             </div>
             <div className="container">
-                {
-                    data.length > 0
-                        ?
-                        <Table headers={headers}>
-                            <TableStandings data={data} />
-                        </Table>
-                        :
-                        <div className="d-flex flex-column align-items-center justify-content-center mt-5 gap-3">
-                            <span className="mt-5">No te has unido a una liga</span>
-                            <button className="btn btn-primary px-3" onClick={handleJoinLeague}>Unirse a liga</button>
-                        </div>
-                }
+                {standings.length > 0 ? (
+                    <Table headers={headers}>
+                        <TableStandings data={standings} /> {/* Pasa los standings a la tabla */}
+                    </Table>
+                ) : (
+                    <div className="d-flex flex-column align-items-center justify-content-center mt-5 gap-3">
+                        <span className="mt-5">No te has unido a una liga</span>
+                        <button className="btn btn-primary px-3" onClick={handleJoinLeague}>Unirse a liga</button>
+                    </div>
+                )}
             </div>
             <Modal show={showModal} onHide={handleClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>Unirse a liga</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <form className={`col-12 col-md-6 col-lg-4 d-flex flex-column gap-2 align-center needs-validation`} noValidate>
+                    <form className="col-12 col-md-6 col-lg-4 d-flex flex-column gap-2 align-center needs-validation" noValidate>
                         <div>
                             <label htmlFor="id" className="form-label fw-bold">Id</label>
                             <input name="id" className="form-control" type="number" placeholder="ID" value={leagueId} onChange={(e) => setLeagueId(e.target.value)} required />
@@ -96,7 +114,7 @@ export const MyLeague = () => {
                     <Button variant="secondary" onClick={handleClose}>
                         Cancelar
                     </Button>
-                    <Button variant='success' onClick={onAccept}>
+                    <Button variant="success" onClick={onAccept}>
                         Unirse a la liga
                     </Button>
                 </Modal.Footer>
