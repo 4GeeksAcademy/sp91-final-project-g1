@@ -4,7 +4,6 @@ import PropTypes from "prop-types";
 import { Context } from "../store/appContext";
 import playerPlaceholder from '../../img/player-placeholder.png'
 
-
 export const Player = (props) => {
     const player = props.player
     const size = props.isInBench ? 150 : 175

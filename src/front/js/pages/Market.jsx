@@ -13,10 +13,10 @@ export const Market = () => {
     const [page, setPage] = useState(1)
     const [pagingData, setPagingData] = useState({
         total: 0,
-        count:0
+        count: 0
     })
 
-    const getPlayers = async() => {
+    const getPlayers = async () => {
         setIsLoading(true)
         const playersData = await actions.api.get('players-market', `page=${page - 1}&limit=15`)
 
@@ -40,10 +40,10 @@ export const Market = () => {
         <div className="container-fluid">
             <h1 className="text-center">Mercado de fichajes</h1>
             <div className="container col-9 col-lg-6 col-xl-4">
-                {!isLoading && 
-                <Table headers={[]}>
-                    <TableMarket data={data} />
-                </Table>}
+                {!isLoading &&
+                    <Table headers={[]}>
+                        <TableMarket data={data} />
+                    </Table>}
                 <Pagination page={page} setPage={setPage} pagingData={pagingData} />
             </div>
         </div>

@@ -24,7 +24,7 @@ export const TableMarketItem = (props) => {
             body: <span>¿Seguro que quieres fichar a <strong>{props.name}</strong> por {props.market_value.toLocaleString()}€?</span>,
             onAccept: async () => {
                 const playerData = props
-                
+
                 const body = {
                     player_id: playerData.uid,
                     position: playerData.position,
@@ -34,8 +34,8 @@ export const TableMarketItem = (props) => {
                 const response = await actions.api.post("fantasy-players", body);
                 if (response) {
                     setShowModal(false);
-                    setIsFiching(false); 
-                    window.location.reload(); 
+                    setIsFiching(false);
+                    window.location.reload();
                 } else {
                     setIsFiching(false);
                 }
@@ -110,14 +110,14 @@ export const TableMarketItem = (props) => {
                                 <span>{props.market_value.toLocaleString()}</span>
                             </div>
                         </div>
-                        <button className="btn btn-primary mt-auto px-3" onClick={handleScoutPlayer}> 
-                        {isFiching ? (
-                            <div className="spinner-border text-primary" role="status">
-                                <span className="visually-hidden">Loading...</span>
-                            </div>
-                        ) : (
-                            "Fichar jugador"
-                        )}</button>
+                        <button className="btn btn-primary mt-auto px-3" onClick={handleScoutPlayer}>
+                            {isFiching ? (
+                                <div className="spinner-border text-primary" role="status">
+                                    <span className="visually-hidden">Loading...</span>
+                                </div>
+                            ) : (
+                                "Fichar jugador"
+                            )}</button>
                         <MyModal show={showModal} setShow={setShowModal} modalData={modalData} />
                     </div>
                 }

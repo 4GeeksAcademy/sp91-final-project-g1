@@ -6,7 +6,7 @@ export const useProtectedPage = () => {
     const navigate = useNavigate()
     const { actions } = useContext(Context)
     const [userData, setUserData] = useState(null)
-    
+
     useEffect(() => {
         const user = actions.getFromLocalStorage("user");
         if (!user) {

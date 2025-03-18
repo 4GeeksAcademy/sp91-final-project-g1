@@ -8,7 +8,7 @@ export const Login = () => {
 	const [isLoginActive, setIsLoginActive] = useState(true)
 
 	return (
-        <div className="row flex-grow-1 align-items-center">
+		<div className="row flex-grow-1 align-items-center">
 			<LoginForm isLoginActive={isLoginActive} />
 			<SignupForm isLoginActive={isLoginActive} />
 			<LoginSliderOverlays isLoginActive={isLoginActive} setIsLoginActive={setIsLoginActive} />

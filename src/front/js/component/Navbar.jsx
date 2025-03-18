@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import logo from "../../img/logo.png"
 import { Context } from "../store/appContext";
 
-
 export const Navbar = () => {
 	const { actions } = useContext(Context)
 	const user = actions.getFromLocalStorage("user")

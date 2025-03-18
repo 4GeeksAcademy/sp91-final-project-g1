@@ -1,6 +1,7 @@
 import React from "react";
 import home from "../../img/home.png";
 import { useNavigate } from "react-router-dom";
+import '../../styles/homePage.css'
 
 const CustomSplitText = ({ text, delay }) => {
     return (
@@ -14,7 +15,7 @@ const CustomSplitText = ({ text, delay }) => {
                         opacity: 0,
                     }}
                 >
-                    {char === " " ? "\u00A0" : char} 
+                    {char === " " ? "\u00A0" : char}
                 </span>
             ))}
         </div>
@@ -36,20 +37,8 @@ export const HomePage = () => {
                 <p style={{ fontSize: "1.5rem", fontWeight: "bold", color: "white", marginBottom: "10px" }}>
                     "La emoción del fútbol comienza aquí. <br /> ¡Forma tu equipo y compite ahora!"
                 </p>
-                <button type="button" className="btn btn-success mt-3" onClick={() => navigate('/login')} style={{ fontWeight: "bold", position: "absolute", top: "110%", left: "170px"}}>Empezar</button>
+                <button type="button" className="btn btn-success mt-3" onClick={() => navigate('/login')} style={{ fontWeight: "bold", position: "absolute", top: "110%", left: "170px" }}>Empezar</button>
             </div>
         </div>
     );
 };
-
-const styles = `
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-`;
-
-const styleSheet = document.createElement("style");
-styleSheet.type = "text/css";
-styleSheet.innerText = styles;
-document.head.appendChild(styleSheet);
