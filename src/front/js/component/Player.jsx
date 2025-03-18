@@ -4,15 +4,12 @@ import PropTypes from "prop-types";
 import { Context } from "../store/appContext";
 import playerPlaceholder from '../../img/player-placeholder.png'
 
-
 export const Player = (props) => {
     const player = props.player
     const size = props.isInBench ? 150 : 175
     const [processedImage, setProcessedImage] = useState(null);
     const { actions } = useContext(Context)
     const handleImageLoad = async () => {
-        console.log(player);
-
         const processed = await actions.removeBgFromImage(player.photo);
         if (processed !== "ERROR") {
             setProcessedImage(processed);

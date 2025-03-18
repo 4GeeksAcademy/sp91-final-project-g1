@@ -13,7 +13,7 @@ export const ResetPassword = (props) => {
 
     const [alertData, setAlertData] = useState({ body: "", variant: "" })
     const [showAlert, setShowAlert] = useState(false);
-    
+
     const user = useProtectedPage();
 
     const handleResetPassword = async (event) => {

@@ -4,7 +4,7 @@ export const checkFormValidity = (event) => {
     if (!form.checkValidity()) {
 
         event.stopPropagation()
-        form.classList.add("was-validated") 
+        form.classList.add("was-validated")
         return false
     }
     return true

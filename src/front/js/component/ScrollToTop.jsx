@@ -1,7 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-
 class ScrollToTop extends React.Component {
 	componentDidUpdate(prevProps) {
 		if (this.props.location !== prevProps.location) {

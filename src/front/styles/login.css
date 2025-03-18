@@ -9,15 +9,16 @@
 .overlay {
     height: calc(100% - 150px);
 }
+
 .background {
     position: fixed;
-	background: linear-gradient(to right, #FF4B2B, #FF416C);
-	background-repeat: no-repeat;
-	background-size: cover;
+    background: linear-gradient(to right, #FF4B2B, #FF416C);
+    background-repeat: no-repeat;
+    background-size: cover;
     background-position: 0 0;
     width: 50%;
     left: 50%;
-	transition: all 0.6s ease-in-out;
+    transition: all 0.6s ease-in-out;
 
     &.left {
         left: 0;
@@ -37,11 +38,11 @@
 .overlay-panel {
     color: white;
     position: relative;
-	height: 100%;
+    height: 100%;
     opacity: 0;
     z-index: -1;
     transition: all 0.6s ease-in-out;
-    
+
     &.visible {
         opacity: 1;
         transition: opacity 1.5s ease-in-out;
